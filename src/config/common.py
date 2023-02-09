@@ -48,10 +48,11 @@ INSTALLED_APPS = (
     'health_check.contrib.celery_ping',  # requires celery
     # Your apps
     'src.notifications',
-    'src.users',
     'src.social',
+    'src.users',
     'src.files',
     'src.common',
+    'bhealthapp',
     # Third party optional apps
     # app must be placed somewhere after all the apps that are going to be generating activities
     # 'actstream',                  # activity stream
@@ -224,8 +225,10 @@ LOGGING = {
     },
 }
 
+
 # Custom user app
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'bhealthapp.Patient'
+
 
 # Social login
 AUTHENTICATION_BACKENDS = (

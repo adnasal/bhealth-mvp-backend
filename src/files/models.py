@@ -11,7 +11,7 @@ class File(models.Model):
 
     file = models.FileField(blank=False, null=False)
     thumbnail = models.ImageField(blank=True, null=True)
-    author = models.ForeignKey('users.User', related_name='files', on_delete=models.DO_NOTHING)
+    author = models.ForeignKey('bhealthapp.Patient', related_name='files', on_delete=models.DO_NOTHING)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
