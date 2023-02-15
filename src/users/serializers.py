@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Appointment, Lab, User, Type, City, Service, Result, UserRating
+from .models import Appointment, Lab, User, Type, City, Service, Result, UserRating, LabService
 
 
 class ChoiceField(serializers.ChoiceField):
@@ -115,6 +115,27 @@ class LabViewSerializer(serializers.ModelSerializer):
         depth = 1
 
 
+class LabServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LabService
+        fields = [
+            "city",
+            "lab",
+            "service",
+        ]
+
+
+class LabServiceViewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LabService
+        fields = [
+            "city",
+            "lab",
+            "service",
+        ]
+        depth = 1
+
+
 class UserRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRating
@@ -224,6 +245,3 @@ class ResultViewSerializer(serializers.ModelSerializer):
             "patient",
         ]
         depth = 1
-
-
-
