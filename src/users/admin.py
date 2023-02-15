@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import City, Patient, Type, Doctor, Service, Result, Appointment, Lab, UserRating
+from .models import City, User, Type, Service, Result, Appointment, Lab, UserRating
 
 
 @admin.register(City)
@@ -24,7 +24,7 @@ class CityAdmin(admin.ModelAdmin):
 #admin.site.register(City, CityAdmin)
 
 
-@admin.register(Patient)
+@admin.register(User)
 class PatientAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
@@ -116,14 +116,14 @@ class ServiceAdmin(admin.ModelAdmin):
 class AppointmentAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['city', 'lab', 'service', 'date']
+            'fields': ['city', 'lab', 'service', 'date', 'patient', 'status']
         }),
     )
 
-    list_display = ['city', 'lab', 'service', 'date']
+    list_display = ['city', 'lab', 'service', 'date', 'patient', 'status']
     date_hierarchy = 'date'
     empty_value_display = '-empty-'
-    list_filter = ['lab', 'service']
+    list_filter = ['lab', 'service', 'status', 'patient']
 
 
 #admin.site.register(Appointment, AppointmentAdmin)
@@ -144,20 +144,6 @@ class ResultAdmin(admin.ModelAdmin):
 #admin.site.register(Result, ResultAdmin)
 
 
-@admin.register(Doctor)
-class DoctorAdmin(admin.ModelAdmin):
-    fieldsets = (
-        (None, {
-            'fields': ['name', 'surname', 'service']
-        }),
-    )
-
-    list_display = ['name', 'surname', 'service']
-    empty_value_display = '-empty-'
-    list_filter = ['name', 'surname', 'service']
-
-
-#admin.site.register(Doctor, DoctorAdmin)
 
 
 

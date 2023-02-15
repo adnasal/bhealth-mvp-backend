@@ -11,7 +11,9 @@ from rest_framework_simplejwt.views import (
 )
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from bhealthapp.views import DoctorListView
+
+from bhealth.src.users.views import LabView, LabListView
+
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
     public=True,
@@ -30,8 +32,9 @@ urlpatterns = [
     path('summernote/', include('django_summernote.urls')),
     # api
     path('api/v1/', include(router.urls)),
+    url(r'^api/v1/labs', LabListView.as_view(), name='labs'),
+    url('api/v1/lab', LabView.as_view(), name='get_lab'),
     url(r'^api/v1/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
-    url(r'^api/v1/doctors', DoctorListView.as_view(), name='doctors'),
     # auth
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
