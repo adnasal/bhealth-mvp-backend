@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 from django.db.models import Q
 from rest_framework import pagination
@@ -10,8 +11,10 @@ from rest_framework.generics import (
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 
-from .models import Lab, LabService, Result, Appointment
-from .serializers import LabSerializer, LabServiceViewSerializer, ResultViewSerializer, AppointmentSerializer, AppointmentViewSerializer
+from .models import Lab, LabService, Result, Appointment, User, UserRating
+from .serializers import LabSerializer, LabServiceViewSerializer, PatientSerializer, PatientViewSerializer, \
+    UserRatingViewSerializer, UserRatingSerializer, ResultViewSerializer, PatientSerializer, PatientViewSerializer, \
+    AppointmentSerializer, AppointmentViewSerializer
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s: %(levelname)s: %(message)s')
@@ -193,9 +196,176 @@ class UpcomingAppointmentsUserView(ListAPIView):
         if param.get('patient') is not None:
 
             patient = param.get('patient')
-            query_set = Appointment.objects.filter(patient=patient, datetime=#svi veci od now)
+            date_from = today
+            date_to = today + relativedelta(years=5)
+            query_set = Appointment.objects.filter(patient=patient, datetime__gte=date_from, datetime__lte=date_to)
 
         else:
             query_set = Appointment.objects.none()
 
         return query_set
+
+
+class PastAppointmentsUserView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = AppointmentViewSerializer
+    ordering = ['-id']
+    pagination_class = CustomPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    def get_queryset(self, *args, **kwargs):
+        param = self.request.query_params
+
+        query_params = ValidateQueryParams(data=param)
+        query_params.is_valid(raise_exception=True)
+
+        if param.get('patient') is not None:
+
+            patient = param.get('patient')
+            date_from = today - relativedelta(years=5)
+            date_to = today
+            query_set = Appointment.objects.filter(patient=patient, datetime__gte=date_from, datetime__lte=date_to)
+
+        else:
+            query_set = Appointment.objects.none()
+
+        return query_set
+
+
+class UpcomingAppointmentsLabView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = AppointmentViewSerializer
+    ordering = ['-id']
+    pagination_class = CustomPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    def get_queryset(self, *args, **kwargs):
+        param = self.request.query_params
+
+        query_params = ValidateQueryParams(data=param)
+        query_params.is_valid(raise_exception=True)
+
+        if param.get('lab') is not None:
+
+            lab = param.get('lab')
+            date_from = today
+            date_to = today + relativedelta(years=5)
+            query_set = Appointment.objects.filter(lab=lab, datetime__gte=date_from, datetime__lte=date_to)
+
+        else:
+            query_set = Appointment.objects.none()
+
+        return query_set
+
+
+class PastAppointmentsLabView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = AppointmentViewSerializer
+    ordering = ['-id']
+    pagination_class = CustomPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    def get_queryset(self, *args, **kwargs):
+        param = self.request.query_params
+
+        query_params = ValidateQueryParams(data=param)
+        query_params.is_valid(raise_exception=True)
+
+        if param.get('lab') is not None:
+
+            lab = param.get('lab')
+            date_from = today - relativedelta(years=5)
+            date_to = today
+            query_set = Appointment.objects.filter(lab=lab, datetime__gte=date_from, datetime__lte=date_to)
+
+        else:
+            query_set = Appointment.objects.none()
+
+        return query_set
+
+
+class RequestsView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = AppointmentViewSerializer
+    ordering = ['-id']
+    pagination_class = CustomPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    def get_queryset(self, *args, **kwargs):
+        param = self.request.query_params
+
+        query_params = ValidateQueryParams(data=param)
+        query_params.is_valid(raise_exception=True)
+
+        if param.get('lab') is not None:
+
+            lab = param.get('lab')
+
+            query_set = Appointment.objects.filter(lab=lab, status=0, datetime__isNull=True)
+
+        else:
+            query_set = Appointment.objects.none()
+
+        return query_set
+
+
+class PatientsView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = PatientViewSerializer
+    ordering = ['-id']
+    pagination_class = CustomPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    def get_queryset(self, *args, **kwargs):
+        param = self.request.query_params
+
+        query_params = ValidateQueryParams(data=param)
+        query_params.is_valid(raise_exception=True)
+
+        if param.get('lab') is not None:
+
+            lab = param.get('lab')
+
+            query_set = User.objects.filter(lab=lab)
+
+        else:
+            query_set = User.objects.none()
+
+        return query_set
+
+
+class WeRecommendView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = UserRatingViewSerializer
+    ordering = ['-id']
+    pagination_class = CustomPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    def get(self, *args, **kwargs):
+        labs = Lab.objects.all()
+        my_dict = {}
+
+        for lab in labs:
+            my_dict[lab.name] = UserRating.objects.filter(rating=5, lab=lab).count()
+
+        top_6_labs = sorted(my_dict.items(), key=lambda x: x[1])[:6]
+        return Response(top_6_labs, content_type="application/json")
+
+
+class ProfileView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = PatientViewSerializer
+
+    def get(self, request):
+        try:
+            param = self.request.query_params.get('pk', default=None)
+            if param is None:
+                return Response('Please add primary key.')
+            user = User.objects.get(pk=param)
+        except User.DoesNotExist:
+            return Response({'Failure': 'User does not exist.'}, status.HTTP_404_NOT_FOUND)
+
+        serializer = PatientViewSerializer(user)
+        data = serializer.data
+
+        return Response(data, content_type="application/json")

@@ -1,15 +1,12 @@
-import uuid
+from PIL import Image
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.dispatch import receiver
-from django.contrib.auth.models import AbstractUser
-from rest_framework_simplejwt.tokens import RefreshToken
-from easy_thumbnails.fields import ThumbnailerImageField
-from PIL import Image
 from django.urls import reverse
 from django_rest_passwordreset.signals import reset_password_token_created
-from easy_thumbnails.signals import saved_file
 from easy_thumbnails.signal_handlers import generate_aliases_global
-
+from easy_thumbnails.signals import saved_file
+from rest_framework_simplejwt.tokens import RefreshToken
 from src.common.helpers import build_absolute_uri
 from src.notifications.services import notify, ACTIVITY_USER_RESETS_PASS
 
@@ -102,7 +99,6 @@ class Lab(models.Model):
     phone_number = models.TextField(null=True, max_length=20)  # check appropriate type
     email = models.TextField(null=False, max_length=80)  # check appropriate type
     website = models.CharField(max_length=255, blank=True, null=True, default=None)
-    # rating calculated using function
     # working days and hours?
 
 
