@@ -104,9 +104,9 @@ CELERY_TIMEZONE = 'UTC'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'NAME': os.getenv('DB_NAME', 'database'),
+        'USER': os.getenv('DB_USER', 'user'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'password'),
         'HOST': os.getenv('DB_HOST', 'db'),
         'PORT': os.getenv('DB_PORT'),
     }
@@ -227,7 +227,7 @@ LOGGING = {
 
 
 # Custom user app
-AUTH_USER_MODEL = 'bhealthapp.Patient'
+AUTH_USER_MODEL = 'users.User'
 
 
 # Social login

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Doctor, Appointment, Lab, Patient, Type, City, Service, Result, UserRating
+from .models import Appointment, Lab, User, Type, City, Service, Result, UserRating
 
 
 class ChoiceField(serializers.ChoiceField):
@@ -43,7 +43,7 @@ class CityViewSerializer(serializers.ModelSerializer):
 
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Patient
+        model = User
         fields = [
             "profile_picture",
             "profile_link",
@@ -63,10 +63,10 @@ class PatientSerializer(serializers.ModelSerializer):
 
 
 class PatientViewSerializer(serializers.ModelSerializer):
-    gender = ChoiceField(choices=Patient.GENDER_CHOICES)
+    gender = ChoiceField(choices=User.GENDER_CHOICES)
 
     class Meta:
-        model = Patient
+        model = User
         fields = [
             "profile_picture",
             "profile_link",
@@ -188,6 +188,8 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "lab",
             "service",
             "date",
+            "patient",
+            "status",
         ]
 
 
@@ -199,6 +201,8 @@ class AppointmentViewSerializer(serializers.ModelSerializer):
             "lab",
             "service",
             "date",
+            "patient",
+            "status",
         ]
         depth = 1
 
@@ -222,22 +226,4 @@ class ResultViewSerializer(serializers.ModelSerializer):
         depth = 1
 
 
-class DoctorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Doctor
-        fields = [
-            "name",
-            "surname",
-            "service"
-        ]
 
-
-class DoctorViewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Doctor
-        fields = [
-            "name",
-            "surname",
-            "service"
-        ]
-        depth = 1

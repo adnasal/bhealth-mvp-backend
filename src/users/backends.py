@@ -2,7 +2,7 @@ import re
 
 from django.contrib.auth.backends import ModelBackend
 
-from src.users.models import User
+from .models import User
 
 
 class EmailOrUsernameModelBackend(ModelBackend):

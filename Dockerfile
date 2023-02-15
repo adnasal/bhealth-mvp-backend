@@ -6,6 +6,7 @@ WORKDIR /app
 EXPOSE 80
 ENV PYTHONUNBUFFERED 1
 
+
 RUN set -x && \
 	apt-get update && \
 	apt -f install	&& \
@@ -18,6 +19,11 @@ CMD ["sh", "/entrypoint-web.sh"]
 COPY ./docker/ /
 
 COPY ./requirements/ ./requirements
+
+
+ENV PATH="/root/.local/bin:$PATH"
 RUN pip install -r ./requirements/${REQUIREMENTS_FILE}
 
 COPY . ./
+
+

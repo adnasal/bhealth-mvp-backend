@@ -1,13 +1,14 @@
 version: '3'
 services:
   db:
-    image: postgres:14.5
+    image: postgres:14.2
     ports:
-      - 5432:5432
+      - "5432:5432"
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+
     volumes:
       - db-data:/data/postgres
 
@@ -18,48 +19,51 @@ services:
         REQUIREMENTS_FILE: dev.txt
     restart: always
     ports:
-      - 8001:8000
+      - "8000:8000"
     env_file: .env
-    command: 'sh -c "cp ./manage.py migrate && ./manage.py runserver 0.0.0.0:8000"'
+    command: 'sh -c "cp ./manage.py migrate && ./manage.py runserver 0.0.0.0:8000 && ./manage.py loaddata bhealthapp/fixtures/symbol_fixtures.json"'
     volumes:
       - ./:/app
     depends_on:
       - db
 
   queue:
-    build:
-      context: .
-      args:
-        REQUIREMENTS_FILE: dev.txt
-    restart: unless-stopped
+    image: bhealth_web:latest
+    restart: always
     env_file: .env
     command: sh /entrypoint-queue.sh
     volumes:
       - ./:/app
 
-# beat:
-  # build:
-   #  context: .
-   #  args:
-   #    REQUIREMENTS_FILE: dev.txt
-  # restart: unless-stopped
-  # env_file: .env
-  # command: sh /entrypoint-beat.sh
- #  volumes:
-  #   - ./:/app
+ # beat:
+ #   image: bhealth_web:latest
+   # restart: always
+  #  env_file: .env
+  #  command: sh /entrypoint-beat.sh
+   # volumes:
+   #   - ./:/app
+   # depends_on:
+   #   - web
+   #   - db
+   #   - redis
 
   redis:
     image: redis:alpine
-    restart: unless-stopped
-    ports:
-      - 6379:6379
-
-  mailhog:
-    image: mailhog/mailhog:latest
     restart: always
     ports:
-      - 1025:1025
-      - 8025:8025
+      - "6379:6379"
+
+  flower:
+    image: bhealth_web:latest
+    command: 'sh -c "celery -A bhealthapp flower --basic_auth=test:password && python3 -m celery worker"'
+    volumes:
+        - ./:/app
+    ports:
+        - "5555:5555"
+    env_file: .env
+    depends_on:
+      - queue
+      - redis
 
 volumes:
   db-data:
