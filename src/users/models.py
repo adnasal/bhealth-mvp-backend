@@ -1,15 +1,12 @@
-import uuid
+from PIL import Image
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.dispatch import receiver
-from django.contrib.auth.models import AbstractUser
-from rest_framework_simplejwt.tokens import RefreshToken
-from easy_thumbnails.fields import ThumbnailerImageField
-from PIL import Image
 from django.urls import reverse
 from django_rest_passwordreset.signals import reset_password_token_created
-from easy_thumbnails.signals import saved_file
 from easy_thumbnails.signal_handlers import generate_aliases_global
-
+from easy_thumbnails.signals import saved_file
+from rest_framework_simplejwt.tokens import RefreshToken
 from src.common.helpers import build_absolute_uri
 from src.notifications.services import notify, ACTIVITY_USER_RESETS_PASS
 
@@ -29,10 +26,20 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
 
     notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])
 
+
+class GetOrNoneManager(models.Manager):
+    def get_or_none(self, **kwargs):
+        try:
+            return self.get(**kwargs)
+        except self.model.DoesNotExist:
+            return None
+
+
 class City(models.Model):
     name = models.TextField(default='Sarajevo', max_length=255, null=False)
     country = models.TextField(default='Bosnia and Herzegovina', max_length=255, null=False)  # choices on frontend
     postal_code = models.IntegerField()
+
 
 class User(AbstractUser):
     GENDER_MALE = 0
@@ -64,13 +71,14 @@ class User(AbstractUser):
     def save(self):
         super().save()
 
-        img = Image.open(self.image.path) # Open image
+        img = Image.open(self.image.path)  # Open image
 
         # resize image
         if img.height > 300 or img.width > 300:
             output_size = (300, 300)
-            img.thumbnail(output_size) # Resize image
-            img.save(self.image.path) # Save it again and override the larger image
+            img.thumbnail(output_size)  # Resize image
+            img.save(self.image.path)  # Save it again and override the larger image
+
     def get_tokens(self):
         refresh = RefreshToken.for_user(self)
 
@@ -91,7 +99,6 @@ class Lab(models.Model):
     phone_number = models.TextField(null=True, max_length=20)  # check appropriate type
     email = models.TextField(null=False, max_length=80)  # check appropriate type
     website = models.CharField(max_length=255, blank=True, null=True, default=None)
-    # rating calculated using function
     # working days and hours?
 
 
@@ -141,11 +148,17 @@ class Service(models.Model):
     type = models.ForeignKey(Type, related_name='service_type', on_delete=models.DO_NOTHING)
 
 
+class LabService(models.Model):
+    city = models.TextField(default='Sarajevo')
+    lab = models.ForeignKey(Lab, related_name='lab_name', on_delete=models.DO_NOTHING)
+    service = models.ForeignKey(Service, related_name='service_name', on_delete=models.DO_NOTHING)
+
+
 class Appointment(models.Model):
     city = models.TextField(default='Sarajevo')
     lab = models.ForeignKey(Lab, related_name='lab_name', on_delete=models.DO_NOTHING)
     service = models.ForeignKey(Service, related_name='service_name', on_delete=models.DO_NOTHING)
-    patient = models.ForeignKey(User, related_name = 'patient', on_delete=models.DO_NOTHING)
+    patient = models.ForeignKey(User, related_name='patient', on_delete=models.DO_NOTHING)
     date = models.DateTimeField(null=True)
 
     STATUS_PENDING = 0
