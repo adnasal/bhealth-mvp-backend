@@ -12,7 +12,9 @@ from rest_framework_simplejwt.views import (
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from bhealth.src.users.views import LabView, LabListView
+from bhealth.src.users.views import LabView, LabListView, ResultListView, UpcomingAppointmentsLabView, \
+    UpcomingAppointmentsUserView, PatientViewSerializer, PastAppointmentsLabView, PastAppointmentsUserView, \
+    RequestsView, ResultView, ProfileView, LabAddView, LabRemoveView, WeRecommendView
 
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
@@ -33,7 +35,19 @@ urlpatterns = [
     # api
     path('api/v1/', include(router.urls)),
     url(r'^api/v1/labs', LabListView.as_view(), name='labs'),
+    url(r'^api/v1/results', ResultListView.as_view(), name='results_per_lab'),
+    url(r'^api/v1/upcoming_appointments', UpcomingAppointmentsUserView.as_view(), name='user_upcomming_appointments'),
+    url(r'^api/v1/past_appointments', PastAppointmentsUserView.as_view(), name='user_past_appointments'),
+    url(r'^api/v1/upcoming_appointments_labs', UpcomingAppointmentsLabView.as_view(), name='lab_upcoming_appointments'),
+    url(r'^api/v1/past_appointments_labs', PastAppointmentsLabView.as_view(), name='lab_past_appointments'),
+    url(r'^api/v1/requests', RequestsView.as_view(), name='requests'),
+    url(r'^api/v1/patients', PatientViewSerializer.as_view(), name='patients'),
     url('api/v1/lab', LabView.as_view(), name='get_lab'),
+    url(r'^api/v1/add_lab', LabAddView.as_view(), name='add_lab'),
+    url(r'^api/v1/remove_lab', LabRemoveView.as_view(), name='remove_lab'),
+    url('api/v1/we_recommend', WeRecommendView.as_view(), name='top_labs'),
+    url('api/v1/result', ResultView.as_view(), name='get_result'),
+    url('api/v1/profile', ProfileView.as_view(), name='get_profile'),
     url(r'^api/v1/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
     # auth
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),

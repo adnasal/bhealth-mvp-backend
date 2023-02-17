@@ -33,9 +33,18 @@ class ValidateQueryParams(serializers.Serializer):
         "^[\u0621-\u064A\u0660-\u0669 a-zA-Z0-9]{3,30}$", required=False
     )
 
-    date = fields.DateField(format='%Y-%m-%d', required=False)
-    date_from = fields.DateField(format='%Y-%m-%d', required=False)
-    date_to = fields.DateField(format='%Y-%m-%d', required=False)
+    city = fields.RegexField(
+        "^[\u0621-\u064A\u0660-\u0669 a-zA-Z]{3,30}$", required=False
+    )
+    lab = fields.RegexField(
+        "^[\u0621-\u064A\u0660-\u0669 a-zA-Z]{3,30}$", required=False
+    )
+    service = fields.RegexField(
+        "^[\u0621-\u064A\u0660-\u0669 a-zA-Z]{3,30}$", required=False
+    )
+    patient = fields.RegexField(
+        "^[\u0621-\u064A\u0660-\u0669 a-zA-Z0-9]{3,30}$", required=False
+    )
     pk = fields.RegexField("^[\u0621-\u064A\u0660-\u0669 0-9]{3,30}$", required=False)
     day = fields.IntegerField(min_value=1, max_value=30, required=False)
     year = fields.IntegerField(min_value=1990, max_value=today.year, required=False)
