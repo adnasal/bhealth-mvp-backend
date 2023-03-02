@@ -35,9 +35,13 @@ class GetOrNoneManager(models.Manager):
             return None
 
 
+class Country(models.Model):
+    name = models.TextField(default='Bosnia and Herzegovina', max_length=255, null=False)
+
+
 class City(models.Model):
     name = models.TextField(default='Sarajevo', max_length=255, null=False)
-    country = models.TextField(default='Bosnia and Herzegovina', max_length=255, null=False)  # choices on frontend
+    country = models.ForeignKey(Country, related_name='city_country', on_delete=models.DO_NOTHING)
     postal_code = models.IntegerField()
 
 
@@ -53,12 +57,12 @@ class User(AbstractUser):
     profile_link = models.CharField(max_length=255, blank=True, null=True, default=None)
     name = models.TextField(null=False, max_length=20)
     surname = models.TextField(null=False, max_length=30)
-    password = models.CharField(max_length=100)  # add forms.py
-    phone_number = models.TextField(null=True, max_length=20)  # check appropriate type
-    email = models.TextField(null=False, max_length=80)  # check appropriate type
-    dob = models.DateTimeField(null=False)
-    address = models.TextField(max_length=80, null=False, default=None)
-    city = models.ForeignKey(City, related_name='user_city', on_delete=models.DO_NOTHING)
+    password = models.CharField(max_length=255)  # add forms.py
+    phone_number = models.CharField(max_length=255)
+    email = models.TextField(null=False, max_length=255)
+    dob = models.DateTimeField(null=True)
+    address = models.TextField(max_length=80, null=True, default=None)
+    city = models.ForeignKey(City, related_name='user_city', on_delete=models.DO_NOTHING, default=1)
     joined_at = models.DateTimeField(auto_now_add=True, null=True)
     is_blocked = models.BooleanField(default=False)
     is_email_verified = models.BooleanField(default=False)
@@ -68,16 +72,16 @@ class User(AbstractUser):
     )
 
     # Override the save method of the model
-    def save(self):
-        super().save()
+   # def save(self, *args, **kwargs):
+    #    super().save()
 
-        img = Image.open(self.image.path)  # Open image
+      #  img = Image.open(self.image.path)  # Open image
 
         # resize image
-        if img.height > 300 or img.width > 300:
-            output_size = (300, 300)
-            img.thumbnail(output_size)  # Resize image
-            img.save(self.image.path)  # Save it again and override the larger image
+      #  if img.height > 300 or img.width > 300:
+       #     output_size = (300, 300)
+       #     img.thumbnail(output_size)  # Resize image
+       #     img.save(self.image.path)  # Save it again and override the larger image
 
     def get_tokens(self):
         refresh = RefreshToken.for_user(self)
@@ -96,8 +100,8 @@ class Lab(models.Model):
     name = models.TextField(null=False, max_length=255, default=None)
     password = models.CharField(max_length=100)  # add forms.py
     address = models.TextField(null=False, max_length=350, default=None)
-    phone_number = models.TextField(null=True, max_length=20)  # check appropriate type
-    email = models.TextField(null=False, max_length=80)  # check appropriate type
+    phone_number = models.CharField(null=True, max_length=255)
+    email = models.TextField(null=False, max_length=255)
     website = models.CharField(max_length=255, blank=True, null=True, default=None)
     # working days and hours?
 
@@ -106,7 +110,6 @@ class UserRating(models.Model):
     user = models.ForeignKey(User, related_name='user_rating', on_delete=models.DO_NOTHING)
     lab = models.ForeignKey(Lab, related_name='lab_rating', on_delete=models.DO_NOTHING)
 
-    # connection with frontend rating?
     RATING_NULL = 0
     RATING_ONE = 1
     RATING_TWO = 2
@@ -129,13 +132,6 @@ class UserRating(models.Model):
     )
 
 
-# class OpenHours(models.Model):
-
-#   institution = models.ForeignKey(Institution, related_name='institution_open_hours', on_delete=models.DO_NOTHING)
-#   day = models.ForeignKey(Day, related_name='day_open_hours', on_delete=models.DO_NOTHING)
-#   start_time = models.TimeField(auto_now=False, auto_now_add=True, null=True)
-#   end_time = models.TimeField(auto_now=False, auto_now_add=True, null=True)
-
 class Type(models.Model):
     name = models.TextField(null=False, max_length=255, default=None)
     description = models.TextField(null=False, max_length=1000, default='Type Description')
@@ -149,15 +145,15 @@ class Service(models.Model):
 
 
 class LabService(models.Model):
-    city = models.TextField(default='Sarajevo')
-    lab = models.ForeignKey(Lab, related_name='lab_name', on_delete=models.DO_NOTHING)
+    city_service = models.TextField(default='Sarajevo')
+    lab_service = models.ForeignKey(Lab, related_name='lab_name_service', on_delete=models.DO_NOTHING)
     service = models.ForeignKey(Service, related_name='service_name', on_delete=models.DO_NOTHING)
 
 
 class Appointment(models.Model):
-    city = models.TextField(default='Sarajevo')
-    lab = models.ForeignKey(Lab, related_name='lab_name', on_delete=models.DO_NOTHING)
-    service = models.ForeignKey(Service, related_name='service_name', on_delete=models.DO_NOTHING)
+    city_appointment = models.TextField(default='Sarajevo')
+    lab_appointment = models.ForeignKey(Lab, related_name='lab_name_appointment', on_delete=models.DO_NOTHING)
+    service_appointment = models.ForeignKey(Service, related_name='service_appointment', on_delete=models.DO_NOTHING)
     patient = models.ForeignKey(User, related_name='patient', on_delete=models.DO_NOTHING)
     date = models.DateTimeField(null=True)
 

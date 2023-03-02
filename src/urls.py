@@ -12,9 +12,7 @@ from rest_framework_simplejwt.views import (
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from bhealth.src.users.views import LabView, LabListView, ResultListView, UpcomingAppointmentsLabView, \
-    UpcomingAppointmentsUserView, PatientViewSerializer, PastAppointmentsLabView, PastAppointmentsUserView, \
-    RequestsView, ResultView, ProfileView, LabAddView, LabRemoveView, WeRecommendView
+from src.users.views import LabView, LabListView, PatientSerializer, ResultListView, UpcomingAppointmentsLabView, UpcomingAppointmentsUserView, PatientViewSerializer, PastAppointmentsLabView, PastAppointmentsUserView, WeRecommendView, ProfileView, PatientsView, ResultView, RequestsView, LabAddView, LabRemoveView
 
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
@@ -22,7 +20,6 @@ schema_view = get_schema_view(
 )
 
 router = DefaultRouter()
-
 
 
 urlpatterns = [
@@ -41,7 +38,7 @@ urlpatterns = [
     url(r'^api/v1/upcoming_appointments_labs', UpcomingAppointmentsLabView.as_view(), name='lab_upcoming_appointments'),
     url(r'^api/v1/past_appointments_labs', PastAppointmentsLabView.as_view(), name='lab_past_appointments'),
     url(r'^api/v1/requests', RequestsView.as_view(), name='requests'),
-    url(r'^api/v1/patients', PatientViewSerializer.as_view(), name='patients'),
+    #url(r'^api/v1/patients', PatientViewSerializer.as_view(), name='patients'),
     url('api/v1/lab', LabView.as_view(), name='get_lab'),
     url(r'^api/v1/add_lab', LabAddView.as_view(), name='add_lab'),
     url(r'^api/v1/remove_lab', LabRemoveView.as_view(), name='remove_lab'),

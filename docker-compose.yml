@@ -21,14 +21,14 @@ services:
     ports:
       - "8000:8000"
     env_file: .env
-    command: 'sh -c "cp ./manage.py migrate && ./manage.py runserver 0.0.0.0:8000 && ./manage.py loaddata bhealthapp/fixtures/symbol_fixtures.json"'
+    command: 'sh -c "cp ./manage.py migrate && ./manage.py runserver 0.0.0.0:8000"'
     volumes:
       - ./:/app
     depends_on:
       - db
 
   queue:
-    image: bhealth_web:latest
+    image: bhealth-mvp-backend_web:latest
     restart: always
     env_file: .env
     command: sh /entrypoint-queue.sh
@@ -54,7 +54,7 @@ services:
       - "6379:6379"
 
   flower:
-    image: bhealth_web:latest
+    image: bhealth-mvp-backend_web:latest
     command: 'sh -c "celery -A bhealthapp flower --basic_auth=test:password && python3 -m celery worker"'
     volumes:
         - ./:/app

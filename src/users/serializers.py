@@ -205,9 +205,9 @@ class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
         fields = [
-            "city",
-            "lab",
-            "service",
+            "city_appointment",
+            "lab_appointment",
+            "service_appointment",
             "date",
             "patient",
             "status",
@@ -218,9 +218,9 @@ class AppointmentViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
         fields = [
-            "city",
-            "lab",
-            "service",
+            "city_appointment",
+            "lab_appointment",
+            "service_appointment",
             "date",
             "patient",
             "status",

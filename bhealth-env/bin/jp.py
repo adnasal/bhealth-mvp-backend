@@ -1,4 +1,4 @@
-#!/home/adna/Desktop/bhealth_backend/bhealth/bhealth-env/bin/python3
+#!/home/adna/bhealth-mvp-backend/bhealth-env/bin/python3
 
 import sys
 import json

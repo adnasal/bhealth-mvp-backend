@@ -310,7 +310,7 @@ class RequestsView(ListAPIView):
 
             lab = param.get('lab')
 
-            query_set = Appointment.objects.filter(lab=lab, status=0, datetime__isNull=True)
+            query_set = Appointment.objects.filter(lab_appointment=lab, status=0, datetime__isNull=True)
 
         else:
             query_set = Appointment.objects.none()

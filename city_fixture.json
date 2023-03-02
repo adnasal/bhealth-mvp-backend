@@ -1,0 +1,19 @@
+[{
+  "model": "models.City",
+  "fields": {
+    "id": "1",
+    "name": "Sarajevo",
+    "country": "1",
+    "postal_code": "71000"
+  }
+},
+  {
+  "model": "models.Country",
+  "fields": {
+    "id": "1",
+    "name": "Bosnia and Herzegovina"
+  }
+}
+]
+
+

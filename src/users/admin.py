@@ -116,17 +116,18 @@ class ServiceAdmin(admin.ModelAdmin):
 class AppointmentAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['city', 'lab', 'service', 'date', 'patient', 'status']
+            'fields': ['city_appointment', 'lab_appointment', 'service_appointment', 'date', 'patient', 'status']
         }),
     )
 
-    list_display = ['city', 'lab', 'service', 'date', 'patient', 'status']
+    list_display = ['city_appointment', 'lab_appointment', 'service_appointment', 'date', 'patient', 'status']
     date_hierarchy = 'date'
     empty_value_display = '-empty-'
-    list_filter = ['lab', 'service', 'status', 'patient']
+    list_filter = ['lab_appointment', 'service_appointment', 'status', 'patient']
 
 
 #admin.site.register(Appointment, AppointmentAdmin)
+
 
 @admin.register(Result)
 class ResultAdmin(admin.ModelAdmin):

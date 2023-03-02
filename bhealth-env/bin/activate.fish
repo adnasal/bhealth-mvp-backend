@@ -30,7 +30,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/adna/Desktop/bhealth_backend/bhealth/bhealth-env"
+set -gx VIRTUAL_ENV "/home/adna/bhealth-mvp-backend/bhealth-env"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
