@@ -4,6 +4,7 @@ from dateutil.relativedelta import relativedelta
 
 from django.db.models import Q
 from rest_framework import pagination
+from rest_framework.authtoken.models import Token
 from rest_framework import status, filters, serializers, fields
 from rest_framework.generics import (
     CreateAPIView, GenericAPIView, DestroyAPIView, ListAPIView
@@ -50,6 +51,21 @@ class ValidateQueryParams(serializers.Serializer):
     year = fields.IntegerField(min_value=1990, max_value=today.year, required=False)
 
 
+class UserCreate(GenericAPIView):
+    serializer_class = PatientSerializer
+    def post(self, request, format='json'):
+        serializer = PatientSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            if user:
+                token = Token.objects.create(user=user)
+                json = serializer.data
+                json['token'] = token.key
+                return Response(json, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class LabListView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = LabServiceViewSerializer
@@ -64,7 +80,7 @@ class LabListView(ListAPIView):
         query_params = ValidateQueryParams(data=param)
         query_params.is_valid(raise_exception=True)
 
-        queryset = LabService.objects.all().order_by('lab_id')
+        queryset = LabService.objects.all().order_by('id')
 
         if param.get('search') is not None:
 
@@ -72,13 +88,13 @@ class LabListView(ListAPIView):
             query_set = queryset.filter(Q(lab__name__contains=search) | Q(service__name__contains=search))
 
         elif param.get('city') is not None:
-            query_set = queryset.filter(city=param.get('city'))
+            query_set = queryset.filter(lab_service__city=param.get('city'))
 
         elif param.get('lab') is not None:
-            query_set = queryset.filter(lab=param.get('lab'))
+            query_set = queryset.filter(lab_service=param.get('lab'))
 
         elif param.get('service') is not None:
-            query_set = queryset.filter(city=param.get('service'))
+            query_set = queryset.filter(lab_service__city=param.get('service'))
 
         else:
             query_set = queryset

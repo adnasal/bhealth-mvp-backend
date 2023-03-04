@@ -145,7 +145,6 @@ class Service(models.Model):
 
 
 class LabService(models.Model):
-    city_service = models.TextField(default='Sarajevo')
     lab_service = models.ForeignKey(Lab, related_name='lab_name_service', on_delete=models.DO_NOTHING)
     service = models.ForeignKey(Service, related_name='service_name', on_delete=models.DO_NOTHING)
 
@@ -155,7 +154,7 @@ class Appointment(models.Model):
     lab_appointment = models.ForeignKey(Lab, related_name='lab_name_appointment', on_delete=models.DO_NOTHING)
     service_appointment = models.ForeignKey(Service, related_name='service_appointment', on_delete=models.DO_NOTHING)
     patient = models.ForeignKey(User, related_name='patient', on_delete=models.DO_NOTHING)
-    date = models.DateTimeField(null=True)
+    date = models.DateTimeField(null=True, blank=True)
 
     STATUS_PENDING = 0
     STATUS_CONFIRMED = 1

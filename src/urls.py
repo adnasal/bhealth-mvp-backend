@@ -12,7 +12,7 @@ from rest_framework_simplejwt.views import (
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from src.users.views import LabView, LabListView, PatientSerializer, ResultListView, UpcomingAppointmentsLabView, UpcomingAppointmentsUserView, PatientViewSerializer, PastAppointmentsLabView, PastAppointmentsUserView, WeRecommendView, ProfileView, PatientsView, ResultView, RequestsView, LabAddView, LabRemoveView
+from src.users.views import UserCreate, LabView, LabListView, PatientSerializer, ResultListView, UpcomingAppointmentsLabView, UpcomingAppointmentsUserView, PatientViewSerializer, PastAppointmentsLabView, PastAppointmentsUserView, WeRecommendView, ProfileView, PatientsView, ResultView, RequestsView, LabAddView, LabRemoveView
 
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
@@ -30,7 +30,7 @@ urlpatterns = [
     # summernote editor
     path('summernote/', include('django_summernote.urls')),
     # api
-    path('api/v1/', include(router.urls)),
+    url(r'api/v1/users', UserCreate.as_view(), name='account_create'),
     url(r'^api/v1/labs', LabListView.as_view(), name='labs'),
     url(r'^api/v1/results', ResultListView.as_view(), name='results_per_lab'),
     url(r'^api/v1/upcoming_appointments', UpcomingAppointmentsUserView.as_view(), name='user_upcomming_appointments'),
@@ -42,7 +42,7 @@ urlpatterns = [
     url('api/v1/lab', LabView.as_view(), name='get_lab'),
     url(r'^api/v1/add_lab', LabAddView.as_view(), name='add_lab'),
     url(r'^api/v1/remove_lab', LabRemoveView.as_view(), name='remove_lab'),
-    url('api/v1/we_recommend', WeRecommendView.as_view(), name='top_labs'),
+    url('api/v1/we_recommend', LabListView.as_view(), name='top_labs'),
     url('api/v1/result', ResultView.as_view(), name='get_result'),
     url('api/v1/profile', ProfileView.as_view(), name='get_profile'),
     url(r'^api/v1/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
