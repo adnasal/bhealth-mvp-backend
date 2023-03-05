@@ -42,6 +42,21 @@ class CityViewSerializer(serializers.ModelSerializer):
         depth = 1
 
 
+class PatientLoginSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+    password = serializers.CharField(min_length=8)
+
+    class Meta:
+        model = User
+        fields = [
+            "email",
+            "password",
+        ]
+
+
 class PatientSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,

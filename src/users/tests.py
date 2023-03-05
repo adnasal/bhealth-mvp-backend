@@ -1,9 +1,12 @@
-from django.test import TestCase
 from django.urls import reverse
-from rest_framework.test import APITestCase
-from django.contrib.auth.models import User
-from rest_framework import status
 import collections
+
+from django.contrib.auth.models import User
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APITestCase
+
 collections.Callable = collections.abc.Callable
 
 
@@ -16,22 +19,19 @@ class AccountsTest(APITestCase):
         self.create_url = reverse('account_create')
 
     def test_create_user(self):
-        """
-        Ensure we can create a new user and a valid token is created with it.
-        """
         data = {
             'username': 'foobar',
             'email': 'foobar@example.com',
             'password': 'somepassword'
         }
 
-        response = self.client.post(self.create_url , data, format='json')
+        response = self.client.post(self.create_url, data, format='json')
+        user = User.objects.latest('id')
 
-        # We want to make sure we have two users in the database
-        self.assertEqual(User.objects.count(), 2)
-        # And that we're returning a 201 created code.
+        token = Token.objects.get(user=user)
+        self.assertEqual(response.data['token'], token.key)
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        # Additionally, we want to return the username and email upon successful creation.
         self.assertEqual(response.data['username'], data['username'])
         self.assertEqual(response.data['email'], data['email'])
         self.assertFalse('password' in response.data)

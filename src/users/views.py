@@ -1,11 +1,15 @@
 import logging
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 
+from dateutil.relativedelta import relativedelta
+from django.contrib import messages
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Q
+from django.shortcuts import render, redirect
 from rest_framework import pagination
-from rest_framework.authtoken.models import Token
 from rest_framework import status, filters, serializers, fields
+from rest_framework.authtoken.models import Token
 from rest_framework.generics import (
     CreateAPIView, GenericAPIView, DestroyAPIView, ListAPIView
 )
@@ -13,9 +17,9 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 
 from .models import Lab, LabService, Result, Appointment, User, UserRating
-from .serializers import LabSerializer, LabServiceViewSerializer, PatientSerializer, PatientViewSerializer, \
-    UserRatingViewSerializer, UserRatingSerializer, ResultViewSerializer, PatientSerializer, PatientViewSerializer, \
-    AppointmentSerializer, AppointmentViewSerializer
+from .serializers import LabSerializer, LabServiceViewSerializer, UserRatingViewSerializer, ResultViewSerializer, \
+    PatientSerializer, PatientViewSerializer, \
+    AppointmentViewSerializer, PatientLoginSerializer
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s: %(levelname)s: %(message)s')
@@ -53,7 +57,8 @@ class ValidateQueryParams(serializers.Serializer):
 
 class UserCreate(GenericAPIView):
     serializer_class = PatientSerializer
-    def post(self, request, format='json'):
+
+    def post(self, request):
         serializer = PatientSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -64,6 +69,44 @@ class UserCreate(GenericAPIView):
                 return Response(json, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LabCreate(GenericAPIView):
+    serializer_class = LabSerializer
+
+    def post(self, request):
+        serializer = LabSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            if user:
+                token = Token.objects.create(user=user)
+                json = serializer.data
+                json['token'] = token.key
+                return Response(json, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserLogin(GenericAPIView):
+    serializer_class = PatientLoginSerializer
+
+    def post(self, request):
+        if request.method == "POST":
+            form = AuthenticationForm(request, data=request.POST)
+            if form.is_valid():
+                username = form.cleaned_data.get('username')
+                password = form.cleaned_data.get('password')
+                user = authenticate(username=username, password=password)
+                if user is not None:
+                    login(request, user)
+                    messages.info(request, f"You are now logged in as {username}.")
+                    return redirect("main:homepage")
+                else:
+                    messages.error(request, "Invalid username or password.")
+            else:
+                messages.error(request, "Invalid username or password.")
+        form = AuthenticationForm()
+        return render(request=request, template_name="src/users/login.html", context={"login_form": form})
 
 
 class LabListView(ListAPIView):

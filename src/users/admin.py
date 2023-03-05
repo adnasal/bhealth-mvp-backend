@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import City, User, Type, Service, Result, Appointment, Lab, UserRating
 
 
@@ -21,7 +22,7 @@ class CityAdmin(admin.ModelAdmin):
     search_fields = ("name__startswith",)
 
 
-#admin.site.register(City, CityAdmin)
+# admin.site.register(City, CityAdmin)
 
 
 @admin.register(User)
@@ -29,11 +30,13 @@ class PatientAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': [
-                'profile_picture', 'profile_link', 'name', 'surname', 'password', 'phone_number', 'email', 'dob', 'address', 'city', 'joined_at', 'is_blocked', 'is_email_verified', 'gender']
+                'profile_picture', 'profile_link', 'name', 'surname', 'password', 'phone_number', 'email', 'dob',
+                'address', 'city', 'joined_at', 'is_blocked', 'is_email_verified', 'gender']
         }),
     )
 
-    list_display = ['profile_picture', 'profile_link', 'name', 'surname', 'password', 'phone_number', 'email', 'dob', 'address', 'city', 'joined_at', 'is_blocked', 'is_email_verified', 'gender']
+    list_display = ['profile_picture', 'profile_link', 'name', 'surname', 'password', 'phone_number', 'email', 'dob',
+                    'address', 'city', 'joined_at', 'is_blocked', 'is_email_verified', 'gender']
 
     date_hierarchy = 'joined_at'
     empty_value_display = '-empty-'
@@ -41,7 +44,7 @@ class PatientAdmin(admin.ModelAdmin):
     search_fields = ("name__startswith",)
 
 
-#admin.site.register(Patient, PatientAdmin)
+# admin.site.register(Patient, PatientAdmin)
 
 
 @admin.register(Lab)
@@ -59,7 +62,7 @@ class LabAdmin(admin.ModelAdmin):
     search_fields = ("name__startswith",)
 
 
-#admin.site.register(Lab, LabAdmin)
+# admin.site.register(Lab, LabAdmin)
 
 
 @admin.register(UserRating)
@@ -76,7 +79,7 @@ class UserRatingAdmin(admin.ModelAdmin):
     search_fields = ("lab__startswith",)
 
 
-#admin.site.register(UserRating, UserRatingAdmin)
+# admin.site.register(UserRating, UserRatingAdmin)
 
 
 @admin.register(Type)
@@ -93,7 +96,7 @@ class TypeAdmin(admin.ModelAdmin):
     search_fields = ("name__startswith",)
 
 
-#admin.site.register(Type, TypeAdmin)
+# admin.site.register(Type, TypeAdmin)
 
 
 @admin.register(Service)
@@ -109,7 +112,7 @@ class ServiceAdmin(admin.ModelAdmin):
     list_filter = ['name', 'type']
 
 
-#admin.site.register(Service, ServiceAdmin)
+# admin.site.register(Service, ServiceAdmin)
 
 
 @admin.register(Appointment)
@@ -126,7 +129,7 @@ class AppointmentAdmin(admin.ModelAdmin):
     list_filter = ['lab_appointment', 'service_appointment', 'status', 'patient']
 
 
-#admin.site.register(Appointment, AppointmentAdmin)
+# admin.site.register(Appointment, AppointmentAdmin)
 
 
 @admin.register(Result)
@@ -141,11 +144,4 @@ class ResultAdmin(admin.ModelAdmin):
     empty_value_display = '-empty-'
     list_filter = ['appointment', 'patient']
 
-
-#admin.site.register(Result, ResultAdmin)
-
-
-
-
-
-
+# admin.site.register(Result, ResultAdmin)
