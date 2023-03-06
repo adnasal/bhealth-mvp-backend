@@ -8,7 +8,6 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-
     volumes:
       - db-data:/data/postgres
 
@@ -35,17 +34,17 @@ services:
     volumes:
       - ./:/app
 
- # beat:
- #   image: bhealth_web:latest
-   # restart: always
-  #  env_file: .env
-  #  command: sh /entrypoint-beat.sh
-   # volumes:
-   #   - ./:/app
-   # depends_on:
-   #   - web
-   #   - db
-   #   - redis
+    # beat:
+    #   image: bhealth_web:latest
+    # restart: always
+    #  env_file: .env
+    #  command: sh /entrypoint-beat.sh
+    # volumes:
+    #   - ./:/app
+    # depends_on:
+    #   - web
+    #   - db
+    #   - redis
 
   redis:
     image: redis:alpine
@@ -57,9 +56,9 @@ services:
     image: bhealth-mvp-backend_web:latest
     command: 'sh -c "celery -A bhealthapp flower --basic_auth=test:password && python3 -m celery worker"'
     volumes:
-        - ./:/app
+      - ./:/app
     ports:
-        - "5555:5555"
+      - "5555:5555"
     env_file: .env
     depends_on:
       - queue

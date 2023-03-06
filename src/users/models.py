@@ -1,4 +1,3 @@
-from PIL import Image
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.dispatch import receiver
@@ -7,6 +6,7 @@ from django_rest_passwordreset.signals import reset_password_token_created
 from easy_thumbnails.signal_handlers import generate_aliases_global
 from easy_thumbnails.signals import saved_file
 from rest_framework_simplejwt.tokens import RefreshToken
+
 from src.common.helpers import build_absolute_uri
 from src.notifications.services import notify, ACTIVITY_USER_RESETS_PASS
 
@@ -72,16 +72,16 @@ class User(AbstractUser):
     )
 
     # Override the save method of the model
-   # def save(self, *args, **kwargs):
+    # def save(self, *args, **kwargs):
     #    super().save()
 
-      #  img = Image.open(self.image.path)  # Open image
+    #  img = Image.open(self.image.path)  # Open image
 
-        # resize image
-      #  if img.height > 300 or img.width > 300:
-       #     output_size = (300, 300)
-       #     img.thumbnail(output_size)  # Resize image
-       #     img.save(self.image.path)  # Save it again and override the larger image
+    # resize image
+    #  if img.height > 300 or img.width > 300:
+    #     output_size = (300, 300)
+    #     img.thumbnail(output_size)  # Resize image
+    #     img.save(self.image.path)  # Save it again and override the larger image
 
     def get_tokens(self):
         refresh = RefreshToken.for_user(self)
@@ -145,7 +145,6 @@ class Service(models.Model):
 
 
 class LabService(models.Model):
-    city_service = models.TextField(default='Sarajevo')
     lab_service = models.ForeignKey(Lab, related_name='lab_name_service', on_delete=models.DO_NOTHING)
     service = models.ForeignKey(Service, related_name='service_name', on_delete=models.DO_NOTHING)
 
@@ -155,7 +154,7 @@ class Appointment(models.Model):
     lab_appointment = models.ForeignKey(Lab, related_name='lab_name_appointment', on_delete=models.DO_NOTHING)
     service_appointment = models.ForeignKey(Service, related_name='service_appointment', on_delete=models.DO_NOTHING)
     patient = models.ForeignKey(User, related_name='patient', on_delete=models.DO_NOTHING)
-    date = models.DateTimeField(null=True)
+    date = models.DateTimeField(null=True, blank=True)
 
     STATUS_PENDING = 0
     STATUS_CONFIRMED = 1
