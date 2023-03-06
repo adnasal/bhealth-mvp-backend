@@ -53,7 +53,7 @@ class User(AbstractUser):
         (GENDER_FEMALE, 'Female'),
     )
     username = models.CharField(null=False, max_length=150, unique=True)
-    profile_picture = models.ImageField(default='default.jpg', upload_to='profile_pics')
+    profile_picture = models.ImageField(default='default.jpg', upload_to='profile_pics', null=True)
     profile_link = models.CharField(max_length=255, blank=True, null=True, default=None)
     name = models.TextField(null=False, max_length=20)
     surname = models.TextField(null=False, max_length=30)
@@ -175,7 +175,7 @@ class Appointment(models.Model):
 class Result(models.Model):
     appointment = models.ForeignKey(Appointment, related_name='appointment_result', on_delete=models.DO_NOTHING)
     patient = models.ForeignKey(User, related_name='patient_result', on_delete=models.DO_NOTHING)
-    # pdf_result
+    pdf = models.FileField(upload_to='pdf', default='src/results/Patient Medical History Report.pdf')
     # parameters (JSON)
 
 

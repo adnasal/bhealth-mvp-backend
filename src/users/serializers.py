@@ -263,6 +263,7 @@ class ResultSerializer(serializers.ModelSerializer):
         fields = [
             "appointment",
             "patient",
+            "pdf",
         ]
 
 
@@ -272,5 +273,6 @@ class ResultViewSerializer(serializers.ModelSerializer):
         fields = [
             "appointment",
             "patient",
+            "pdf",
         ]
         depth = 1
