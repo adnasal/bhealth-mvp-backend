@@ -45,7 +45,7 @@ urlpatterns = [
                   url(r'^api/v1/past_appointments_labs', PastAppointmentsLabView.as_view(),
                       name='lab_past_appointments'),
                   url(r'^api/v1/requests', RequestsView.as_view(), name='requests'),
-                  # url(r'^api/v1/patients', PatientViewSerializer.as_view(), name='patients'),
+                  url(r'^api/v1/patients', PatientsView.as_view(), name='patients'),
                   url('api/v1/lab', LabView.as_view(), name='get_lab'),
                   url(r'^api/v1/add_lab', LabAddView.as_view(), name='add_lab'),
                   url(r'^api/v1/remove_lab', LabRemoveView.as_view(), name='remove_lab'),
