@@ -18,8 +18,8 @@ from rest_framework.response import Response
 
 from .models import Lab, LabService, Result, Appointment, User, UserRating
 from .serializers import LabSerializer, LabServiceViewSerializer, UserRatingViewSerializer, ResultViewSerializer, \
-    PatientSerializer, PatientViewSerializer, \
-    AppointmentViewSerializer, PatientLoginSerializer
+    PatientSerializer, PatientViewSerializer, LabViewSerializer, \
+    AppointmentViewSerializer, PatientLoginSerializer, UserRatingSerializer
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s: %(levelname)s: %(message)s')
@@ -111,6 +111,61 @@ class UserLogin(GenericAPIView):
 
 class LabListView(ListAPIView):
     permission_classes = [AllowAny]
+    serializer_class = LabViewSerializer
+    ordering = ['-id']
+    pagination_class = CustomPagination
+    search_fields = ['name', 'city', 'address']
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    def get_queryset(self, *args, **kwargs):
+        param = self.request.query_params
+
+        query_params = ValidateQueryParams(data=param)
+        query_params.is_valid(raise_exception=True)
+
+        queryset = Lab.objects.all().order_by('id')
+
+        if param.get('search') is not None:
+
+            search = param.get('search')
+            query_set = queryset.filter(Q(lab__name__contains=search) | Q(service__name__contains=search))
+
+        elif param.get('city') is not None:
+            query_set = queryset.filter(city=param.get('city'))
+
+        elif param.get('name') is not None:
+            query_set = queryset.filter(name__contains=param.get('name'))
+
+        elif param.get('address') is not None:
+            query_set = queryset.filter(address__contains=param.get('address'))
+
+        else:
+            query_set = queryset
+
+        return query_set
+
+
+class LabView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = LabViewSerializer
+
+    def get(self, request):
+        try:
+            param = self.request.query_params.get('pk', default=None)
+            if param is None:
+                return Response('Please add primary key.')
+            lab = Lab.objects.get(pk=param)
+        except Lab.DoesNotExist:
+            return Response({'Failure': 'Lab does not exist.'}, status.HTTP_404_NOT_FOUND)
+
+        serializer = LabViewSerializer(lab)
+        data = serializer.data
+
+        return Response(data, content_type="application/json")
+
+
+class LabServiceListView(ListAPIView):
+    permission_classes = [AllowAny]
     serializer_class = LabServiceViewSerializer
     ordering = ['-id']
     pagination_class = CustomPagination
@@ -134,10 +189,10 @@ class LabListView(ListAPIView):
             query_set = queryset.filter(lab_service__city=param.get('city'))
 
         elif param.get('lab') is not None:
-            query_set = queryset.filter(lab_service=param.get('lab'))
+            query_set = queryset.filter(lab_service__contains=param.get('lab'))
 
         elif param.get('service') is not None:
-            query_set = queryset.filter(lab_service__city=param.get('service'))
+            query_set = queryset.filter(lab_service__city__contains=param.get('service'))
 
         else:
             query_set = queryset
@@ -145,7 +200,7 @@ class LabListView(ListAPIView):
         return query_set
 
 
-class LabView(GenericAPIView):
+class LabServiceView(GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = LabServiceViewSerializer
 
@@ -156,7 +211,7 @@ class LabView(GenericAPIView):
                 return Response('Please add primary key.')
             lab = LabService.objects.get(pk=param)
         except LabService.DoesNotExist:
-            return Response({'Failure': 'Lab does not exist.'}, status.HTTP_404_NOT_FOUND)
+            return Response({'Failure': 'Service does not exist.'}, status.HTTP_404_NOT_FOUND)
 
         serializer = LabServiceViewSerializer(lab)
         data = serializer.data
@@ -246,6 +301,7 @@ class ResultView(GenericAPIView):
         data = serializer.data
 
         return Response(data, content_type="application/json")
+    # add options for patient id search
 
 
 class UpcomingAppointmentsUserView(ListAPIView):
@@ -318,10 +374,10 @@ class UpcomingAppointmentsLabView(ListAPIView):
             lab = param.get('lab')
             date_from = today
             date_to = today + relativedelta(years=5)
-            query_set = Appointment.objects.filter(lab=lab, datetime__gte=date_from, datetime__lte=date_to)
+            query_set = Appointment.objects.filter(lab_appointment__contains=lab, datetime__gte=date_from, datetime__lte=date_to)
 
         else:
-            query_set = Appointment.objects.none()
+            query_set = Appointment.objects.all()
 
         return query_set
 
@@ -344,10 +400,10 @@ class PastAppointmentsLabView(ListAPIView):
             lab = param.get('lab')
             date_from = today - relativedelta(years=5)
             date_to = today
-            query_set = Appointment.objects.filter(lab=lab, datetime__gte=date_from, datetime__lte=date_to)
+            query_set = Appointment.objects.filter(lab_appointment=lab, datetime__gte=date_from, datetime__lte=date_to)
 
         else:
-            query_set = Appointment.objects.none()
+            query_set = Appointment.objects.all()
 
         return query_set
 
@@ -437,3 +493,21 @@ class ProfileView(GenericAPIView):
         data = serializer.data
 
         return Response(data, content_type="application/json")
+
+
+class RatingAddView(CreateAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = UserRatingSerializer
+
+    def create(self, request, **kwargs):
+        param = self.request.query_params.get('pk', default=None)
+        lab = UserRating.objects.get(lab__pk=param)
+
+        if lab.exists():
+            serializer = UserRatingSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        else:
+            return Response({'Failure': 'Lab does not exist.'}, status.HTTP_200_OK)
+
+        return Response(serializer.validated_data, status.HTTP_201_CREATED)
