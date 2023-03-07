@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from .models import Lab, LabService, Result, Appointment, User, UserRating
 from .serializers import LabSerializer, LabServiceViewSerializer, UserRatingViewSerializer, ResultViewSerializer, \
     PatientSerializer, PatientViewSerializer, LabViewSerializer, \
-    AppointmentViewSerializer, PatientLoginSerializer, UserRatingSerializer
+    AppointmentViewSerializer, PatientLoginSerializer, UserRatingSerializer, ResultSerializer
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s: %(levelname)s: %(message)s')
@@ -374,7 +374,8 @@ class UpcomingAppointmentsLabView(ListAPIView):
             lab = param.get('lab')
             date_from = today
             date_to = today + relativedelta(years=5)
-            query_set = Appointment.objects.filter(lab_appointment__contains=lab, datetime__gte=date_from, datetime__lte=date_to)
+            query_set = Appointment.objects.filter(lab_appointment=lab, datetime__gte=date_from,
+                                                   datetime__lte=date_to)
 
         else:
             query_set = Appointment.objects.all()
@@ -421,11 +422,12 @@ class RequestsView(ListAPIView):
         query_params = ValidateQueryParams(data=param)
         query_params.is_valid(raise_exception=True)
 
-        if param.get('lab') is not None:
+        if param.get('lab_appointment') is not None:
 
-            lab = param.get('lab')
+            lab = param.get('lab_appointment')
 
-            query_set = Appointment.objects.filter(lab_appointment=lab, status=0, datetime__isNull=True)
+            query_set = Appointment.objects.filter(lab_appointment=lab, status=0)
+            # date is null 
 
         else:
             query_set = Appointment.objects.none()
@@ -500,14 +502,50 @@ class RatingAddView(CreateAPIView):
     serializer_class = UserRatingSerializer
 
     def create(self, request, **kwargs):
-        param = self.request.query_params.get('pk', default=None)
-        lab = UserRating.objects.get(lab__pk=param)
+        try:
+            param = self.request.query_params.get('pk', default=None)
+            if param is None:
+                return Response('Please add primary key.')
 
-        if lab.exists():
-            serializer = UserRatingSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-        else:
-            return Response({'Failure': 'Lab does not exist.'}, status.HTTP_200_OK)
+            lab = Lab.objects.get(pk=param)
 
-        return Response(serializer.validated_data, status.HTTP_201_CREATED)
+        except Lab.DoesNotExist:
+            return Response({'Failure': 'Lab you are willing to rate does not exist.'},
+                            status.HTTP_404_NOT_FOUND)
+
+        serializer = UserRatingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        rating = UserRating.objects.last()
+        rating.lab = lab
+        rating.save(update_fields=['lab'])
+
+        return Response(serializer.data, content_type="application/json")
+
+
+class ResultAddView(CreateAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = ResultSerializer
+
+    def create(self, request, **kwargs):
+        try:
+            param = self.request.query_params.get('pk', default=None)
+            if param is None:
+                return Response('Please add primary key.')
+
+            appointment = Appointment.objects.get(pk=param)
+
+        except Appointment.DoesNotExist:
+            return Response({'Failure': 'Appointment you are trying to add result for does not exist.'},
+                            status.HTTP_404_NOT_FOUND)
+
+        serializer = ResultSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        result = Result.objects.last()
+        result.appointment = appointment
+        result.save(update_fields=['appointment'])
+
+        return Response(serializer.data, content_type="application/json")

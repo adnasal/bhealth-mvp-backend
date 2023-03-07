@@ -16,7 +16,7 @@ from src.users.views import UserCreate, LabView, LabListView, LabServiceListView
     ResultListView, \
     UpcomingAppointmentsLabView, UpcomingAppointmentsUserView, PatientViewSerializer, PastAppointmentsLabView, \
     PastAppointmentsUserView, WeRecommendView, ProfileView, PatientsView, ResultView, RequestsView, LabAddView, \
-    LabRemoveView, UserLogin, LabCreate, RatingAddView
+    LabRemoveView, UserLogin, LabCreate, RatingAddView, ResultAddView
 
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
@@ -55,6 +55,7 @@ urlpatterns = [
                   url('api/v1/result', ResultView.as_view(), name='get_result'),
                   url('api/v1/profile', ProfileView.as_view(), name='get_profile'),
                   url('api/v1/add_rating', RatingAddView.as_view(), name='add_rating'),
+                  url('api/v1/add_result', ResultAddView.as_view(), name='add_result'),
                   url(r'^api/v1/password_reset/',
                       include('django_rest_passwordreset.urls', namespace='password_reset')),
                   # auth
