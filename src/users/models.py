@@ -103,7 +103,6 @@ class Lab(models.Model):
     phone_number = models.CharField(null=True, max_length=255)
     email = models.TextField(null=False, max_length=255)
     website = models.CharField(max_length=255, blank=True, null=True, default=None)
-    # working days and hours?
 
 
 class UserRating(models.Model):

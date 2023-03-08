@@ -11,7 +11,7 @@ from rest_framework import pagination
 from rest_framework import status, filters, serializers, fields
 from rest_framework.authtoken.models import Token
 from rest_framework.generics import (
-    CreateAPIView, GenericAPIView, DestroyAPIView, ListAPIView
+    CreateAPIView, GenericAPIView, DestroyAPIView, ListAPIView, get_object_or_404
 )
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from .models import Lab, LabService, Result, Appointment, User, UserRating
 from .serializers import LabSerializer, LabServiceViewSerializer, UserRatingViewSerializer, ResultViewSerializer, \
     PatientSerializer, PatientViewSerializer, LabViewSerializer, \
-    AppointmentViewSerializer, PatientLoginSerializer, UserRatingSerializer, ResultSerializer
+    AppointmentViewSerializer, PatientLoginSerializer, UserRatingSerializer, ResultSerializer, AppointmentSerializer
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s: %(levelname)s: %(message)s')
@@ -87,6 +87,18 @@ class LabCreate(GenericAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class AddAppointmentView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = AppointmentSerializer
+
+    def create(self, request, **kwargs):
+        serializer = AppointmentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.validated_data, status.HTTP_201_CREATED)
+
+
 class UserLogin(GenericAPIView):
     serializer_class = PatientLoginSerializer
 
@@ -107,6 +119,49 @@ class UserLogin(GenericAPIView):
                 messages.error(request, "Invalid username or password.")
         form = AuthenticationForm()
         return render(request=request, template_name="src/users/login.html", context={"login_form": form})
+
+
+class UserUpdateView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = PatientSerializer
+
+    def put(self, request):
+        try:
+            param = self.request.query_params.get('pk', default=None)
+            if param is None:
+                return Response('Please add primary key.')
+            User.objects.get(pk=param)
+        except User.DoesNotExist:
+            return Response({'Failure': 'User does not exist.'},
+                            status.HTTP_404_NOT_FOUND)
+
+        serializer = PatientSerializer(instance=get_object_or_404(User, pk=param), data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.validated_data, status.HTTP_202_ACCEPTED)
+
+
+class LabUpdateView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = LabSerializer
+
+    def put(self, request):
+        try:
+            param = self.request.query_params.get('pk', default=None)
+            if param is None:
+                return Response('Please add primary key.')
+            Lab.objects.get(pk=param)
+        except Lab.DoesNotExist:
+            return Response({'Failure': 'Lab does not exist.'},
+                            status.HTTP_404_NOT_FOUND)
+
+        serializer = LabSerializer(instance=get_object_or_404(Lab, pk=param), data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(data=serializer.validated_data, content_type="application/json",
+                        status=status.HTTP_202_ACCEPTED)
 
 
 class LabListView(ListAPIView):
@@ -427,7 +482,7 @@ class RequestsView(ListAPIView):
             lab = param.get('lab_appointment')
 
             query_set = Appointment.objects.filter(lab_appointment=lab, status=0)
-            # date is null 
+            # date is null
 
         else:
             query_set = Appointment.objects.none()

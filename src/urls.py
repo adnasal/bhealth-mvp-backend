@@ -16,7 +16,7 @@ from src.users.views import UserCreate, LabView, LabListView, LabServiceListView
     ResultListView, \
     UpcomingAppointmentsLabView, UpcomingAppointmentsUserView, PatientViewSerializer, PastAppointmentsLabView, \
     PastAppointmentsUserView, WeRecommendView, ProfileView, PatientsView, ResultView, RequestsView, LabAddView, \
-    LabRemoveView, UserLogin, LabCreate, RatingAddView, ResultAddView
+    LabRemoveView, UserLogin, LabCreate, RatingAddView, ResultAddView, UserUpdateView, LabUpdateView, AddAppointmentView
 
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
@@ -24,6 +24,9 @@ schema_view = get_schema_view(
 )
 
 router = DefaultRouter()
+
+
+
 
 urlpatterns = [
                   # admin panel
@@ -38,6 +41,9 @@ urlpatterns = [
                   url(r'api/v1/login', UserLogin.as_view(), name='login'),
                   url(r'^api/v1/labs', LabListView.as_view(), name='labs'),
                   url(r'^api/v1/lab_services', LabServiceListView.as_view(), name='lab_services'),
+                  url(r'^api/v1/edit_profile_user', UserUpdateView.as_view(), name='edit_profile_user'),
+                  url(r'^api/v1/edit_profile_lab', LabUpdateView.as_view(), name='edit_profile_lab'),
+                  url(r'^api/v1/add_appointment', AddAppointmentView.as_view(), name='add_appointment'),
                   url(r'^api/v1/results', ResultListView.as_view(), name='results_per_lab'),
                   url(r'^api/v1/upcoming_appointments', UpcomingAppointmentsUserView.as_view(),
                       name='user_upcomming_appointments'),
