@@ -333,6 +333,11 @@ class ResultListView(ListAPIView):
             patient = param.get('patient')
             query_set = Result.objects.filter(patient=patient)
 
+        elif param.get('appointment') is not None:
+
+            appointment = param.get('appointment')
+            query_set = Result.objects.filter(appointment=appointment)
+
         else:
             query_set = Result.objects.none()
 
@@ -352,11 +357,31 @@ class ResultView(GenericAPIView):
         except Result.DoesNotExist:
             return Response({'Failure': 'Result does not exist.'}, status.HTTP_404_NOT_FOUND)
 
-        serializer = LabServiceViewSerializer(result)
+        serializer = ResultViewSerializer(result)
         data = serializer.data
 
         return Response(data, content_type="application/json")
     # add options for patient id search
+    # add to get per appointment id
+
+
+class AppointmentView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = AppointmentViewSerializer
+
+    def get(self, request):
+        try:
+            param = self.request.query_params.get('pk', default=None)
+            if param is None:
+                return Response('Please add primary key.')
+            appointment = Appointment.objects.get(pk=param)
+        except Appointment.DoesNotExist:
+            return Response({'Failure': 'Appointment does not exist.'}, status.HTTP_404_NOT_FOUND)
+
+        serializer = AppointmentViewSerializer(appointment)
+        data = serializer.data
+
+        return Response(data, content_type="application/json")
 
 
 class UpcomingAppointmentsUserView(ListAPIView):
@@ -431,6 +456,9 @@ class UpcomingAppointmentsLabView(ListAPIView):
             date_to = today + relativedelta(years=5)
             query_set = Appointment.objects.filter(lab_appointment=lab, datetime__gte=date_from,
                                                    datetime__lte=date_to)
+            if param.get('today') is True:
+                query_set = Appointment.objects.filter(lab_appointment=lab, datetime__gte=today,
+                                                       datetime__lte=today)
 
         else:
             query_set = Appointment.objects.all()
