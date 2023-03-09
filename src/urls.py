@@ -12,10 +12,11 @@ from rest_framework_simplejwt.views import (
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from src.users.views import UserCreate, LabView, LabListView, PatientSerializer, ResultListView, \
+from src.users.views import UserCreate, LabView, LabListView, LabServiceListView, LabServiceView, PatientSerializer, \
+    ResultListView, \
     UpcomingAppointmentsLabView, UpcomingAppointmentsUserView, PatientViewSerializer, PastAppointmentsLabView, \
     PastAppointmentsUserView, WeRecommendView, ProfileView, PatientsView, ResultView, RequestsView, LabAddView, \
-    LabRemoveView, UserLogin, LabCreate
+    LabRemoveView, UserLogin, LabCreate, RatingAddView, ResultAddView, UserUpdateView, LabUpdateView, AddAppointmentView
 
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
@@ -23,6 +24,9 @@ schema_view = get_schema_view(
 )
 
 router = DefaultRouter()
+
+
+
 
 urlpatterns = [
                   # admin panel
@@ -36,6 +40,10 @@ urlpatterns = [
                   url(r'api/v1/register_lab', LabCreate.as_view(), name='lab_account_create'),
                   url(r'api/v1/login', UserLogin.as_view(), name='login'),
                   url(r'^api/v1/labs', LabListView.as_view(), name='labs'),
+                  url(r'^api/v1/lab_services', LabServiceListView.as_view(), name='lab_services'),
+                  url(r'^api/v1/edit_profile_user', UserUpdateView.as_view(), name='edit_profile_user'),
+                  url(r'^api/v1/edit_profile_lab', LabUpdateView.as_view(), name='edit_profile_lab'),
+                  url(r'^api/v1/add_appointment', AddAppointmentView.as_view(), name='add_appointment'),
                   url(r'^api/v1/results', ResultListView.as_view(), name='results_per_lab'),
                   url(r'^api/v1/upcoming_appointments', UpcomingAppointmentsUserView.as_view(),
                       name='user_upcomming_appointments'),
@@ -49,9 +57,11 @@ urlpatterns = [
                   url('api/v1/lab', LabView.as_view(), name='get_lab'),
                   url(r'^api/v1/add_lab', LabAddView.as_view(), name='add_lab'),
                   url(r'^api/v1/remove_lab', LabRemoveView.as_view(), name='remove_lab'),
-                  url('api/v1/we_recommend', LabListView.as_view(), name='top_labs'),
+                  url('api/v1/we_recommend', WeRecommendView.as_view(), name='top_labs'),
                   url('api/v1/result', ResultView.as_view(), name='get_result'),
                   url('api/v1/profile', ProfileView.as_view(), name='get_profile'),
+                  url('api/v1/add_rating', RatingAddView.as_view(), name='add_rating'),
+                  url('api/v1/add_result', ResultAddView.as_view(), name='add_result'),
                   url(r'^api/v1/password_reset/',
                       include('django_rest_passwordreset.urls', namespace='password_reset')),
                   # auth

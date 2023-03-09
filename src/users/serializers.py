@@ -170,7 +170,6 @@ class UserRatingSerializer(serializers.ModelSerializer):
         model = UserRating
         fields = [
             "user",
-            "lab",
             "rating",
         ]
 
@@ -182,7 +181,6 @@ class UserRatingViewSerializer(serializers.ModelSerializer):
         model = UserRating
         fields = [
             "user",
-            "lab",
             "rating",
         ]
         depth = 1
