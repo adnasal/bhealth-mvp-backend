@@ -16,10 +16,10 @@ from rest_framework.generics import (
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 
-from .models import Lab, LabService, Result, Appointment, User, UserRating
+from .models import Lab, LabService, Result, Appointment, User, UserRating, Notification
 from .serializers import LabSerializer, LabServiceViewSerializer, UserRatingViewSerializer, ResultViewSerializer, \
     PatientSerializer, PatientViewSerializer, LabViewSerializer, \
-    AppointmentViewSerializer, PatientLoginSerializer, UserRatingSerializer, ResultSerializer, AppointmentSerializer
+    AppointmentViewSerializer, PatientLoginSerializer, UserRatingSerializer, ResultSerializer, AppointmentSerializer, NotificationViewSerializer
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s: %(levelname)s: %(message)s')
@@ -140,6 +140,36 @@ class UserUpdateView(GenericAPIView):
         serializer.save()
 
         return Response(serializer.validated_data, status.HTTP_202_ACCEPTED)
+
+class NotificationListView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = NotificationViewSerializer
+    ordering = ['-id']
+    pagination_class = CustomPagination
+    search_fields = ['notification_lab', 'notification_user', 'notification_appointment']
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    def get_queryset(self, *args, **kwargs):
+        param = self.request.query_params
+
+        query_params = ValidateQueryParams(data=param)
+        query_params.is_valid(raise_exception=True)
+
+        queryset = Notification.objects.all().order_by('id')
+
+        if param.get('notification_lab') is not None:
+            query_set = queryset.filter(notification_lab=param.get('notification_lab'))
+
+        elif param.get('notification_user') is not None:
+            query_set = queryset.filter(notification_user=param.get('notification_user'))
+
+        elif param.get('notification_appointment') is not None:
+            query_set = queryset.filter(notification_appointment=param.get('notification_appointment'))
+
+        else:
+            query_set = queryset
+
+        return query_set
 
 
 class LabUpdateView(GenericAPIView):

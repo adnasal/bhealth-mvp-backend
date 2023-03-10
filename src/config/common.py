@@ -82,7 +82,7 @@ EMAIL_PORT = os.getenv('EMAIL_PORT', 1025)
 EMAIL_FROM = os.getenv('EMAIL_FROM', 'noreply@somehost.local')
 
 # Celery
-BROKER_URL = os.getenv('BROKER_URL', 'redis://redis:6379')
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'amqp://localhost')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379')
 
 ADMINS = ()

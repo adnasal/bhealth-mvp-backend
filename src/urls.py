@@ -17,7 +17,7 @@ from src.users.views import UserCreate, LabView, LabListView, LabServiceListView
     UpcomingAppointmentsLabView, UpcomingAppointmentsUserView, PatientViewSerializer, PastAppointmentsLabView, \
     PastAppointmentsUserView, WeRecommendView, ProfileView, PatientsView, ResultView, RequestsView, LabAddView, \
     LabRemoveView, UserLogin, LabCreate, RatingAddView, ResultAddView, UserUpdateView, LabUpdateView, \
-    AddAppointmentView, AppointmentView
+    AddAppointmentView, AppointmentView, NotificationListView
 
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
@@ -41,6 +41,7 @@ urlpatterns = [
                   url(r'api/v1/register_lab', LabCreate.as_view(), name='lab_account_create'),
                   url(r'api/v1/login', UserLogin.as_view(), name='login'),
                   url(r'^api/v1/labs', LabListView.as_view(), name='labs'),
+                  url(r'^api/v1/notifications', NotificationListView.as_view(), name='notifications'),
                   url(r'^api/v1/lab_services', LabServiceListView.as_view(), name='lab_services'),
                   url(r'^api/v1/edit_profile_user', UserUpdateView.as_view(), name='edit_profile_user'),
                   url(r'^api/v1/edit_profile_lab', LabUpdateView.as_view(), name='edit_profile_lab'),

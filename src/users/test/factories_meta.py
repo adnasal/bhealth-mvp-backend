@@ -4,7 +4,8 @@ import factory
 from django.utils import timezone
 from faker import Faker
 
-from src.users.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Appointment, Result
+from src.users.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Appointment, Result, \
+    Notification
 
 fake = Faker()
 
@@ -108,10 +109,21 @@ class AppointmentFactory(factory.django.DjangoModelFactory):
 
 
 class ResultFactory(factory.django.DjangoModelFactory):
-
     class Meta:
         model = Result
 
     appointment = AppointmentFactory
     patient = UserFactory
     pdf = "Result.pdf"
+
+
+class NotificationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Notification
+
+    notification_lab = LabFactory
+    notification_user = UserFactory
+    notification_appointment = AppointmentFactory
+    message = "Notification!"
+    is_confirmed = False
+    is_declined = False

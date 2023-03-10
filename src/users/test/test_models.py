@@ -4,10 +4,11 @@ from datetime import datetime
 from django.core.cache import cache
 from django.test import TestCase
 
-from src.users.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Result, Appointment
+from src.users.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Result, Appointment, \
+    Notification
 
 from src.users.test.factories_meta import ServiceFactory, CityFactory, CountryFactory, LabFactory, LabServiceFactory, \
-    ResultFactory, AppointmentFactory, UserFactory, UserRatingFactory, TypeFactory
+    ResultFactory, AppointmentFactory, UserFactory, UserRatingFactory, TypeFactory, NotificationFactory
 
 
 class TestCountry(TestCase):
@@ -408,3 +409,48 @@ class TestResult(TestCase):
     def test_pdf(self):
         field_label = self.result.pdf
         self.assertEqual(field_label, "Result.pdf")
+
+
+class TestNotification(TestCase):
+
+    def setUp(self):
+        warnings.simplefilter('ignore', category=ImportWarning)
+        self.notification = NotificationFactory
+
+    def test_notification_creation(self):
+        notification_test = self.notification
+        self.assertTrue(isinstance(notification_test, Notification))
+        """Test Models: Notification creation -> Working"""
+
+    def test_notification_lab(self):
+        notification_test = self.notification
+        field_label = notification_test._meta.get_field('notification_lab').verbose_name
+        self.assertEqual(field_label, 'notification lab')
+
+        """"Test Models: Notification lab -> Working"""
+
+    def test_notification_user(self):
+        notification_test = self.notification
+        field_label = notification_test._meta.get_field('notification_user').verbose_name
+        self.assertEqual(field_label, 'notification user')
+
+        """"Test Models: Notification user -> Working"""
+
+    def test_notification_appointment(self):
+        notification_test = self.notification
+        field_label = notification_test._meta.get_field('notification_appointment').verbose_name
+        self.assertEqual(field_label, 'notification appointment')
+
+        """"Test Models: Notification appointment -> Working"""
+
+    def test_notification_message(self):
+        self.assertGreater(self.notification.message, "Notification!")
+        """Test Models: Notification message -> Working"""
+
+    def test_notification_is_confirmed(self):
+        self.assertFalse(self.notification.is_confirmed)
+        """Test Models: Notification confirmed -> Working"""
+
+    def test_notification_is_confirmed(self):
+        self.assertFalse(self.notification.is_declined)
+        """Test Models: Notification declined -> Working"""
