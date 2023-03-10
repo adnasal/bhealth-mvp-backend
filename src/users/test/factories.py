@@ -3,7 +3,7 @@ from datetime import datetime
 import factory
 from faker import Faker
 
-from src.users.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Result, Appointment
+from src.users.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Result, Appointment, Notification
 
 fake = Faker()
 
@@ -142,3 +142,18 @@ class ResultFactory(factory.django.DjangoModelFactory):
         )
 
         return result
+
+
+class NotificationFactory(factory.django.DjangoModelFactory):
+
+    def create_notification(self):
+        notification = Notification.objects.create(
+            notification_lab=1,
+            notification_user=3,
+            notification_appointment=1,
+            message="Notification!",
+            is_confirmed=False,
+            is_declined=False,
+        )
+
+        return notification

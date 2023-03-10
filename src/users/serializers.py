@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import Appointment, Lab, User, Type, City, Service, Result, UserRating, LabService
+from .models import Appointment, Lab, User, Type, City, Service, Result, UserRating, LabService, Notification
 
 
 class ChoiceField(serializers.ChoiceField):
@@ -272,5 +272,32 @@ class ResultViewSerializer(serializers.ModelSerializer):
             "appointment",
             "patient",
             "pdf",
+        ]
+        depth = 1
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = [
+            "notification_lab",
+            "notification_user",
+            "notification_appointment",
+            "message",
+            "is_confirmed",
+            "is_declined"
+        ]
+
+
+class NotificationViewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = [
+            "notification_lab",
+            "notification_user",
+            "notification_appointment",
+            "message",
+            "is_confirmed",
+            "is_declined"
         ]
         depth = 1

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import City, User, Type, Service, Result, Appointment, Lab, UserRating
+from .models import City, User, Type, Service, Result, Appointment, Lab, UserRating, Notification
 
 
 @admin.register(City)
@@ -144,4 +144,22 @@ class ResultAdmin(admin.ModelAdmin):
     empty_value_display = '-empty-'
     list_filter = ['appointment', 'patient']
 
+
 # admin.site.register(Result, ResultAdmin)
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    fieldsets = (
+        (None, {
+            'fields': ['notification_lab', 'notification_user', 'notification_appointment', 'message', 'is_confirmed',
+                       'is_declined']
+        }),
+    )
+
+    list_display = ['notification_lab', 'notification_user', 'notification_appointment', 'message', 'is_confirmed',
+                    'is_declined']
+    empty_value_display = '-empty-'
+    list_filter = ['notification_lab', 'notification_user', 'notification_appointment', 'is_confirmed',
+                   'is_declined']
+
+# admin.site.register(Notification, NotificationAdmin)
