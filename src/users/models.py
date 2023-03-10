@@ -98,7 +98,7 @@ class User(AbstractUser):
 class Lab(models.Model):
     city = models.ForeignKey(City, related_name='lab_city', on_delete=models.DO_NOTHING)
     name = models.TextField(null=False, max_length=255, default=None)
-    password = models.CharField(max_length=100)  # add forms.py
+    password = models.CharField(max_length=100)
     address = models.TextField(null=False, max_length=350, default=None)
     phone_number = models.CharField(null=True, max_length=255)
     email = models.TextField(null=False, max_length=255)
@@ -138,7 +138,7 @@ class Type(models.Model):
 
 class Service(models.Model):
     name = models.TextField(null=False, max_length=255, default=None)
-    duration = models.DurationField(default=30)  # convert microseconds to minutes
+    duration = models.DurationField(default=30)
     description = models.TextField(null=False, max_length=1000, default='Service Description')
     type = models.ForeignKey(Type, related_name='service_type', on_delete=models.DO_NOTHING)
 
@@ -175,7 +175,6 @@ class Result(models.Model):
     appointment = models.ForeignKey(Appointment, related_name='appointment_result', on_delete=models.DO_NOTHING)
     patient = models.ForeignKey(User, related_name='patient_result', on_delete=models.DO_NOTHING)
     pdf = models.FileField(upload_to='pdf', default='src/results/Patient Medical History Report.pdf')
-    # parameters (JSON)
 
 
 saved_file.connect(generate_aliases_global)
