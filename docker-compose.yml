@@ -54,7 +54,7 @@ services:
 
   flower:
     image: bhealth-mvp-backend_web:latest
-    command: 'sh -c "celery -A src.config flower --basic_auth=test:password && python3 -m celery worker"'
+    command: 'sh -c "celery -A src.config && python3 -m celery worker"'
     volumes:
       - ./:/app
     ports:

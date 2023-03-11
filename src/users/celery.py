@@ -2,6 +2,10 @@ from __future__ import absolute_import
 
 import os
 
+import django
+
+django.setup()
+
 from celery import Celery
 from django.conf import settings
 

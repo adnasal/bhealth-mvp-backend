@@ -4,6 +4,14 @@ from datetime import timedelta
 from os.path import join
 
 import dotenv
+
+
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MyProject.settings')
+
+import django
+django.setup()
+
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
@@ -51,6 +59,7 @@ INSTALLED_APPS = (
     'src.users',
     'src.files',
     'src.common',
+    'src.config',
     'bhealthapp',
     # Third party optional apps
     # app must be placed somewhere after all the apps that are going to be generating activities
@@ -83,7 +92,7 @@ EMAIL_FROM = os.getenv('EMAIL_FROM', 'noreply@somehost.local')
 
 # Celery
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'amqp://localhost')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'amqp://localhost')
 
 ADMINS = ()
 
@@ -98,6 +107,9 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
+CELERY_IMPORTS = [
+    'src.users.tasks',
+]
 
 # Postgres
 DATABASES = {
