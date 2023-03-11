@@ -19,7 +19,8 @@ from rest_framework.response import Response
 from .models import Lab, LabService, Result, Appointment, User, UserRating, Notification
 from .serializers import LabSerializer, LabServiceViewSerializer, UserRatingViewSerializer, ResultViewSerializer, \
     PatientSerializer, PatientViewSerializer, LabViewSerializer, \
-    AppointmentViewSerializer, PatientLoginSerializer, UserRatingSerializer, ResultSerializer, AppointmentSerializer, NotificationViewSerializer
+    AppointmentViewSerializer, PatientLoginSerializer, UserRatingSerializer, ResultSerializer, AppointmentSerializer, \
+    NotificationViewSerializer
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s: %(levelname)s: %(message)s')
@@ -140,6 +141,7 @@ class UserUpdateView(GenericAPIView):
         serializer.save()
 
         return Response(serializer.validated_data, status.HTTP_202_ACCEPTED)
+
 
 class NotificationListView(ListAPIView):
     permission_classes = [AllowAny]
@@ -648,12 +650,17 @@ class ResultAddView(CreateAPIView):
                 return Response('Please add primary key.')
 
             appointment = Appointment.objects.get(pk=param)
+            pdf_file = self.request.FILES['pdf']
 
         except Appointment.DoesNotExist:
             return Response({'Failure': 'Appointment you are trying to add result for does not exist.'},
                             status.HTTP_404_NOT_FOUND)
 
-        serializer = ResultSerializer(data=request.data)
+        serializer = ResultSerializer(data=request.data, context={
+            "appointment": appointment.pk,
+            "patient": appointment.patient,
+            "pdf": pdf_file
+        })
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -661,4 +668,4 @@ class ResultAddView(CreateAPIView):
         result.appointment = appointment
         result.save(update_fields=['appointment'])
 
-        return Response(serializer.data, content_type="application/json")
+        return Response("Upload started...")
