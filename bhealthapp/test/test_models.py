@@ -1,13 +1,12 @@
 import warnings
 from datetime import datetime
 
-from django.core.cache import cache
 from django.test import TestCase
 
-from src.users.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Result, Appointment, \
+from bhealthapp.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Result, Appointment, \
     Notification
 
-from src.users.test.factories_meta import ServiceFactory, CityFactory, CountryFactory, LabFactory, LabServiceFactory, \
+from bhealthapp.test.factories_meta import ServiceFactory, CityFactory, CountryFactory, LabFactory, LabServiceFactory, \
     ResultFactory, AppointmentFactory, UserFactory, UserRatingFactory, TypeFactory, NotificationFactory
 
 

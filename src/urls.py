@@ -12,9 +12,8 @@ from rest_framework_simplejwt.views import (
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from src.users.views import UserCreate, LabView, LabListView, LabServiceListView, LabServiceView, PatientSerializer, \
-    ResultListView, \
-    UpcomingAppointmentsLabView, UpcomingAppointmentsUserView, PatientViewSerializer, PastAppointmentsLabView, \
+from bhealthapp.views import UserCreate, LabView, LabListView, LabServiceListView, ResultListView, \
+    UpcomingAppointmentsLabView, UpcomingAppointmentsUserView, PastAppointmentsLabView, \
     PastAppointmentsUserView, WeRecommendView, ProfileView, PatientsView, ResultView, RequestsView, LabAddView, \
     LabRemoveView, UserLogin, LabCreate, RatingAddView, ResultAddView, UserUpdateView, LabUpdateView, \
     AddAppointmentView, AppointmentView, NotificationListView

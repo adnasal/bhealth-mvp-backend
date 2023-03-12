@@ -30,7 +30,7 @@ services:
     image: bhealth-mvp-backend_web:latest
     restart: always
     env_file: .env
-    command: sh /entrypoint-queue.sh
+    command: sh /entrypoint-queue.sh && sh -c "python3 bhealthapp/rabbitmq.py && python3 bhealthapp/consumers.py"
     volumes:
         - ./:/app
 
@@ -54,7 +54,7 @@ services:
 
   flower:
     image: bhealth-mvp-backend_web:latest
-    command: 'sh -c "celery -A src.config && python3 -m celery worker"'
+    command: 'sh -c "celery -A bhealthapp && python3 -m celery worker"'
     volumes:
       - ./:/app
     ports:

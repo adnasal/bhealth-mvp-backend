@@ -6,9 +6,8 @@ from django.contrib.admin.options import (
 from django.contrib.admin.sites import AdminSite
 from django.test import TestCase
 
-from src.users.models import Lab, LabService, Result, User, UserRating, City, Country, Service, Notification
-from src.users.test.factories_meta import UserFactory, ResultFactory, LabFactory, LabServiceFactory, ServiceFactory, \
-    UserRatingFactory, CityFactory, CountryFactory, NotificationFactory
+from bhealthapp.models import Lab
+from bhealthapp.test.factories_meta import LabFactory
 
 
 class MockRequest:

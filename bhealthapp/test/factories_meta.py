@@ -4,7 +4,7 @@ import factory
 from django.utils import timezone
 from faker import Faker
 
-from src.users.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Appointment, Result, \
+from bhealthapp.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Appointment, Result, \
     Notification
 
 fake = Faker()

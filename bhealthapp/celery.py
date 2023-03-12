@@ -2,10 +2,6 @@ from __future__ import absolute_import
 
 import os
 
-import django
-
-django.setup()
-
 from celery import Celery
 from django.conf import settings
 
@@ -16,3 +12,5 @@ app = Celery('src.config')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+
+

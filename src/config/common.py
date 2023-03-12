@@ -5,12 +5,7 @@ from os.path import join
 
 import dotenv
 
-
-import os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MyProject.settings')
-
-import django
-django.setup()
 
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -27,6 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
 
 INSTALLED_APPS = (
+
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -56,11 +52,10 @@ INSTALLED_APPS = (
     # Your apps
     'src.notifications',
     'src.social',
-    'src.users',
     'src.files',
     'src.common',
-    'src.config',
     'bhealthapp',
+
     # Third party optional apps
     # app must be placed somewhere after all the apps that are going to be generating activities
     # 'actstream',                  # activity stream
@@ -91,8 +86,11 @@ EMAIL_PORT = os.getenv('EMAIL_PORT', 1025)
 EMAIL_FROM = os.getenv('EMAIL_FROM', 'noreply@somehost.local')
 
 # Celery
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'amqp://localhost')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'amqp://localhost')
+BROKER_URL = os.getenv('CELERY_BROKER_URL', 'amqp://guest:guest@localhost:5672//')
+#BROKER_URL = 'amqp://guest:guest@localhost:5672//'
+#CELERY_RESULT_BACKEND = 'rpc://'
+
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379')
 
 ADMINS = ()
 
@@ -108,7 +106,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 CELERY_IMPORTS = [
-    'src.users.tasks',
+    'bhealthapp.tasks',
 ]
 
 # Postgres
@@ -237,13 +235,12 @@ LOGGING = {
 }
 
 # Custom user app
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'bhealthapp.User'
 
 # Social login
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.facebook.FacebookOAuth2',
     'social_core.backends.twitter.TwitterOAuth',
-    'src.users.backends.EmailOrUsernameModelBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 for key in ['GOOGLE_OAUTH2_KEY', 'GOOGLE_OAUTH2_SECRET', 'FACEBOOK_KEY', 'FACEBOOK_SECRET', 'TWITTER_KEY',
@@ -292,16 +289,6 @@ SOCIAL_AUTH_TWITTER_PIPELINE = (
 )
 
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/complete/twitter/'
-
-THUMBNAIL_ALIASES = {
-    'src.users': {
-        'thumbnail': {'size': (100, 100), 'crop': True},
-        'medium_square_crop': {'size': (400, 400), 'crop': True},
-        'small_square_crop': {'size': (50, 50), 'crop': True},
-    },
-}
-
-# Django Rest Framework
 
 # Django Rest Framework
 REST_FRAMEWORK = {
@@ -372,3 +359,13 @@ SUMMERNOTE_CONFIG = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+## rabbitmq configuration
+
+RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'localhost')
+RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', 5672)
+RABBITMQ_USER = os.environ.get('RABBITMQ_USER', 'guest')
+RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD', 'guest')
+RABBITMQ_VHOST = os.environ.get('RABBITMQ_VHOST', '/')
+RABBITMQ_EXCHANGE = os.environ.get('RABBITMQ_EXCHANGE', 'my_exchange')
+

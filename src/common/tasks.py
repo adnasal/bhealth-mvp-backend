@@ -12,3 +12,5 @@ def send_email_task(subject, to, default_from, email_html_message):
         alternatives=((email_html_message, 'text/html'),),
     )
     msg.send()
+
+
