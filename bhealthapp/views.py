@@ -1,10 +1,14 @@
+import json
 import logging
 from datetime import datetime
 
+import pika
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
+from django.core.serializers import serialize
 from django.db.models import Q
 from django.shortcuts import render, redirect
 from rest_framework import pagination
@@ -19,7 +23,9 @@ from rest_framework.response import Response
 from .models import Lab, LabService, Result, Appointment, User, UserRating, Notification
 from .serializers import LabSerializer, LabServiceViewSerializer, UserRatingViewSerializer, ResultViewSerializer, \
     PatientSerializer, PatientViewSerializer, LabViewSerializer, \
-    AppointmentViewSerializer, PatientLoginSerializer, UserRatingSerializer, ResultSerializer, AppointmentSerializer, NotificationViewSerializer
+    AppointmentViewSerializer, PatientLoginSerializer, UserRatingSerializer, ResultSerializer, AppointmentSerializer, \
+    NotificationViewSerializer
+from .tasks import upload_pdf
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s: %(levelname)s: %(message)s')
@@ -140,6 +146,7 @@ class UserUpdateView(GenericAPIView):
         serializer.save()
 
         return Response(serializer.validated_data, status.HTTP_202_ACCEPTED)
+
 
 class NotificationListView(ListAPIView):
     permission_classes = [AllowAny]
@@ -647,18 +654,27 @@ class ResultAddView(CreateAPIView):
             if param is None:
                 return Response('Please add primary key.')
 
-            appointment = Appointment.objects.get(pk=param)
+            app = Appointment.objects.get(pk=param)
+
 
         except Appointment.DoesNotExist:
             return Response({'Failure': 'Appointment you are trying to add result for does not exist.'},
                             status.HTTP_404_NOT_FOUND)
 
-        serializer = ResultSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        upload_pdf.delay(param, request.data)
 
-        result = Result.objects.last()
-        result.appointment = appointment
-        result.save(update_fields=['appointment'])
+        # Publish notification to RabbitMQ
+        message = {
+            'type': 'result_created',
+            'data': serialize('json', [app])
+        }
 
-        return Response(serializer.data, content_type="application/json")
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=settings.CELERY_BROKER_URL))
+        channel = connection.channel()
+
+        channel.queue_declare(queue='notifications')
+        channel.basic_publish(exchange='', routing_key='notifications', body=json.dumps(message))
+
+        connection.close()
+
+        return Response("Result added successfully.")

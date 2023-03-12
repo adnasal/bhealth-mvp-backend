@@ -1,7 +1,11 @@
+from distutils.command.upload import upload
+
+from django.core.files.storage import FileSystemStorage
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 from .models import Appointment, Lab, User, Type, City, Service, Result, UserRating, LabService, Notification
+from src.files.models import File
 
 
 class ChoiceField(serializers.ChoiceField):
@@ -263,6 +267,8 @@ class ResultSerializer(serializers.ModelSerializer):
             "patient",
             "pdf",
         ]
+
+
 
 
 class ResultViewSerializer(serializers.ModelSerializer):

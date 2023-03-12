@@ -3,7 +3,7 @@ from datetime import datetime
 import factory
 from faker import Faker
 
-from src.users.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Result, Appointment, Notification
+from bhealthapp.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Result, Appointment, Notification
 
 fake = Faker()
 
