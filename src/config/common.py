@@ -5,6 +5,7 @@ from os.path import join
 
 import dotenv
 
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MyProject.settings')
 
 import sentry_sdk
@@ -87,7 +88,6 @@ EMAIL_FROM = os.getenv('EMAIL_FROM', 'noreply@somehost.local')
 
 # Celery
 BROKER_URL = os.getenv('CELERY_BROKER_URL', 'amqp://guest:guest@localhost:5672//')
-#BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 #CELERY_RESULT_BACKEND = 'rpc://'
 
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379')

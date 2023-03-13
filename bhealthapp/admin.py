@@ -136,13 +136,13 @@ class AppointmentAdmin(admin.ModelAdmin):
 class ResultAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['appointment', 'patient', 'pdf']
+            'fields': ['appointment', 'pdf']
         }),
     )
 
-    list_display = ['appointment', 'patient', 'pdf']
+    list_display = ['appointment', 'pdf']
     empty_value_display = '-empty-'
-    list_filter = ['appointment', 'patient']
+    list_filter = ['appointment']
 
 
 # admin.site.register(Result, ResultAdmin)

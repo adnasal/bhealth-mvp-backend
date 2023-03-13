@@ -233,16 +233,75 @@ class ServiceViewSerializer(serializers.ModelSerializer):
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Appointment
-        fields = [
-            "city_appointment",
-            "lab_appointment",
-            "service_appointment",
-            "date",
-            "patient",
-            "status",
-        ]
+
+        lab_appointment = serializers.SerializerMethodField()
+        service_appointment = serializers.SerializerMethodField()
+        patient = serializers.SerializerMethodField()
+        class Meta:
+            model = Appointment
+            fields = [
+                "city_appointment",
+                "lab_appointment",
+                "service_appointment",
+                "date",
+                "patient",
+                "status",
+            ]
+
+        def get_lab_appointment(self, obj):
+            lab = obj.lab_appointment
+            return {
+                'id': lab.id,
+                'name': lab.name,
+                'password': lab.password,
+                'address': lab.address,
+                'phone_number': lab.phone_number,
+                'email': lab.email,
+                'website': lab.website,
+                'city': {
+                    'id': lab.city.id,
+                    'name': lab.city.name,
+                    # add more fields as needed
+                },
+            }
+
+        def get_service_appointment(self, obj):
+            service = obj.service_appointment
+            return {
+                'id': service.id,
+                'name': service.name,
+                'duration': service.duration.total_seconds(),
+                'description': service.description,
+                'type': {
+                    'id': service.type.id,
+                    'name': service.type.name,
+                    # add more fields as needed
+                },
+            }
+
+        def get_patient(self, obj):
+            patient = obj.patient
+            return {
+                'id': patient.id,
+                'name': patient.name,
+                'surname': patient.surname,
+                'profile_picture': patient.profile_picture.url,
+                'profile_link': patient.profile_link,
+                'phone_number': patient.phone_number,
+                'email': patient.email,
+                'dob': patient.dob,
+                'address': patient.address,
+                'city': {
+                    'id': patient.city.id,
+                    'name': patient.city.name,
+                    # add more fields as needed
+                },
+                'joined_at': patient.joined_at,
+                'is_blocked': patient.is_blocked,
+                'is_email_verified': patient.is_email_verified,
+                'gender': patient.gender,
+            }
+
 
 
 class AppointmentViewSerializer(serializers.ModelSerializer):
@@ -264,7 +323,6 @@ class ResultSerializer(serializers.ModelSerializer):
         model = Result
         fields = [
             "appointment",
-            "patient",
             "pdf",
         ]
 
@@ -276,7 +334,6 @@ class ResultViewSerializer(serializers.ModelSerializer):
         model = Result
         fields = [
             "appointment",
-            "patient",
             "pdf",
         ]
         depth = 1

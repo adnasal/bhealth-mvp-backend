@@ -1,6 +1,8 @@
 import json
 import logging
 from datetime import datetime
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 import pika
 from dateutil.relativedelta import relativedelta
@@ -25,7 +27,7 @@ from .serializers import LabSerializer, LabServiceViewSerializer, UserRatingView
     PatientSerializer, PatientViewSerializer, LabViewSerializer, \
     AppointmentViewSerializer, PatientLoginSerializer, UserRatingSerializer, ResultSerializer, AppointmentSerializer, \
     NotificationViewSerializer
-from .tasks import upload_pdf
+from .tasks import upload_pdf, send_request_notification, request_updated
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s: %(levelname)s: %(message)s')
@@ -93,16 +95,20 @@ class LabCreate(GenericAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AddAppointmentView(GenericAPIView):
+class AddAppointmentView(CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = AppointmentSerializer
 
     def create(self, request, **kwargs):
+        data = request.data.copy()
+        data['status'] = Appointment.STATUS_PENDING
         serializer = AppointmentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializer.validated_data, status.HTTP_201_CREATED)
+        send_request_notification.delay(appointment.id)
+
+        return Response(serializer.data, content_type="application/json")
 
 
 class UserLogin(GenericAPIView):
@@ -439,7 +445,8 @@ class UpcomingAppointmentsUserView(ListAPIView):
             patient = param.get('patient')
             date_from = today
             date_to = today + relativedelta(years=5)
-            query_set = Appointment.objects.filter(patient=patient, datetime__gte=date_from, datetime__lte=date_to)
+            query_set = Appointment.objects.filter(patient=patient, datetime__gte=date_from, datetime__lte=date_to,
+                                                   status=1)
 
         else:
             query_set = Appointment.objects.none()
@@ -465,7 +472,8 @@ class PastAppointmentsUserView(ListAPIView):
             patient = param.get('patient')
             date_from = today - relativedelta(years=5)
             date_to = today
-            query_set = Appointment.objects.filter(patient=patient, datetime__gte=date_from, datetime__lte=date_to)
+            query_set = Appointment.objects.filter(patient=patient, datetime__gte=date_from, datetime__lte=date_to,
+                                                   status=1)
 
         else:
             query_set = Appointment.objects.none()
@@ -492,13 +500,13 @@ class UpcomingAppointmentsLabView(ListAPIView):
             date_from = today
             date_to = today + relativedelta(years=5)
             query_set = Appointment.objects.filter(lab_appointment=lab, datetime__gte=date_from,
-                                                   datetime__lte=date_to)
+                                                   datetime__lte=date_to, status=1)
             if param.get('today') is True:
                 query_set = Appointment.objects.filter(lab_appointment=lab, datetime__gte=today,
-                                                       datetime__lte=today)
+                                                       datetime__lte=today, status=1)
 
         else:
-            query_set = Appointment.objects.all()
+            query_set = Appointment.objects.none()
 
         return query_set
 
@@ -521,10 +529,11 @@ class PastAppointmentsLabView(ListAPIView):
             lab = param.get('lab')
             date_from = today - relativedelta(years=5)
             date_to = today
-            query_set = Appointment.objects.filter(lab_appointment=lab, datetime__gte=date_from, datetime__lte=date_to)
+            query_set = Appointment.objects.filter(lab_appointment=lab, datetime__gte=date_from, datetime__lte=date_to,
+                                                   status=1)
 
         else:
-            query_set = Appointment.objects.all()
+            query_set = Appointment.objects.none()
 
         return query_set
 
@@ -547,7 +556,7 @@ class RequestsView(ListAPIView):
             lab = param.get('lab_appointment')
 
             query_set = Appointment.objects.filter(lab_appointment=lab, status=0)
-            # date is null
+
 
         else:
             query_set = Appointment.objects.none()
@@ -656,25 +665,43 @@ class ResultAddView(CreateAPIView):
 
             app = Appointment.objects.get(pk=param)
 
-
         except Appointment.DoesNotExist:
             return Response({'Failure': 'Appointment you are trying to add result for does not exist.'},
                             status.HTTP_404_NOT_FOUND)
 
         upload_pdf.delay(param, request.data)
 
-        # Publish notification to RabbitMQ
-        message = {
-            'type': 'result_created',
-            'data': serialize('json', [app])
-        }
-
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=settings.CELERY_BROKER_URL))
-        channel = connection.channel()
-
-        channel.queue_declare(queue='notifications')
-        channel.basic_publish(exchange='', routing_key='notifications', body=json.dumps(message))
-
-        connection.close()
-
         return Response("Result added successfully.")
+
+
+class AppointmentUpdateView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = AppointmentSerializer
+
+    def put(self, request):
+        try:
+            param = self.request.query_params.get('pk', default=None)
+            if param is None:
+                return Response('Please add primary key.')
+            appointment = Appointment.objects.get(pk=param)
+        except Appointment.DoesNotExist:
+            return Response({'Failure': 'Appointment does not exist.'},
+                            status.HTTP_404_NOT_FOUND)
+
+        # Only allow updating status to 1 if date field is null
+        if 'status' in request.data and request.data['status'] == 1 and appointment.date is not None:
+            return Response({'Failure': 'You cannot confirm an appointment that has not been confirmed by lab.'},
+                            status.HTTP_400_BAD_REQUEST)
+        else:
+            serializer = AppointmentSerializer(instance=appointment, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            return Response(data=serializer.validated_data, content_type="application/json",
+                            status=status.HTTP_202_ACCEPTED)
+
+# Define a signal receiver function that calls the `date_added_notification` task
+@receiver(post_save, sender=Appointment)
+def appointment_saved(sender, instance, created, **kwargs):
+    if instance.date is not None:
+        request_updated.delay(instance.id)

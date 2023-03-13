@@ -173,7 +173,6 @@ class Appointment(models.Model):
 
 class Result(models.Model):
     appointment = models.ForeignKey(Appointment, related_name='appointment_result', on_delete=models.DO_NOTHING)
-    patient = models.ForeignKey(User, related_name='patient_result', on_delete=models.DO_NOTHING)
     pdf = models.FileField(upload_to='pdf', default='src/results/Patient Medical History Report.pdf')
 
 
