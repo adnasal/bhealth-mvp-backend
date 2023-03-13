@@ -16,7 +16,7 @@ from bhealthapp.views import UserCreate, LabView, LabListView, LabServiceListVie
     UpcomingAppointmentsLabView, UpcomingAppointmentsUserView, PastAppointmentsLabView, \
     PastAppointmentsUserView, WeRecommendView, ProfileView, PatientsView, ResultView, RequestsView, LabAddView, \
     LabRemoveView, UserLogin, LabCreate, RatingAddView, ResultAddView, UserUpdateView, LabUpdateView, \
-    AddAppointmentView, AppointmentView, NotificationListView
+    AddAppointmentView, AppointmentView, NotificationListView, AppointmentUpdateView
 
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
@@ -45,6 +45,7 @@ urlpatterns = [
                   url(r'^api/v1/edit_profile_user', UserUpdateView.as_view(), name='edit_profile_user'),
                   url(r'^api/v1/edit_profile_lab', LabUpdateView.as_view(), name='edit_profile_lab'),
                   url(r'^api/v1/add_appointment', AddAppointmentView.as_view(), name='add_appointment'),
+                  url(r'^api/v1/update_appointment', AppointmentUpdateView.as_view(), name='update_appointment'),
                   url(r'^api/v1/results', ResultListView.as_view(), name='results_per_lab'),
                   url(r'^api/v1/appointment', AppointmentView.as_view(), name='get_appointment'),
                   url(r'^api/v1/upcoming_appointments', UpcomingAppointmentsUserView.as_view(),
