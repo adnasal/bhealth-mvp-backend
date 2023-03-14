@@ -318,6 +318,19 @@ class AppointmentViewSerializer(serializers.ModelSerializer):
         depth = 1
 
 
+class AddRatingSerializer(serializers.Serializer):
+    pk = serializers.IntegerField()
+    rating = serializers.IntegerField(min_value=1, max_value=5)
+
+class AppointmentCancelSerializer(serializers.Serializer):
+    pk = serializers.IntegerField()
+
+    def update(self, instance, validated_data):
+        instance.status = 2
+        instance.save()
+        return instance
+
+
 class ResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = Result
@@ -348,7 +361,6 @@ class NotificationSerializer(serializers.ModelSerializer):
             "notification_appointment",
             "message",
             "is_confirmed",
-            "is_declined"
         ]
 
 
@@ -361,6 +373,5 @@ class NotificationViewSerializer(serializers.ModelSerializer):
             "notification_appointment",
             "message",
             "is_confirmed",
-            "is_declined"
         ]
         depth = 1

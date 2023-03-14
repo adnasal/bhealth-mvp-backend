@@ -1,23 +1,19 @@
-import json
 import logging
 from datetime import datetime
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
-import pika
 from dateutil.relativedelta import relativedelta
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
-from django.core.serializers import serialize
 from django.db.models import Q
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.shortcuts import render, redirect
 from rest_framework import pagination
 from rest_framework import status, filters, serializers, fields
 from rest_framework.authtoken.models import Token
 from rest_framework.generics import (
-    CreateAPIView, GenericAPIView, DestroyAPIView, ListAPIView, get_object_or_404
+    CreateAPIView, GenericAPIView, DestroyAPIView, ListAPIView, get_object_or_404, UpdateAPIView
 )
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
@@ -25,9 +21,10 @@ from rest_framework.response import Response
 from .models import Lab, LabService, Result, Appointment, User, UserRating, Notification
 from .serializers import LabSerializer, LabServiceViewSerializer, UserRatingViewSerializer, ResultViewSerializer, \
     PatientSerializer, PatientViewSerializer, LabViewSerializer, \
-    AppointmentViewSerializer, PatientLoginSerializer, UserRatingSerializer, ResultSerializer, AppointmentSerializer, \
-    NotificationViewSerializer
-from .tasks import upload_pdf, send_request_notification, request_updated
+    AppointmentViewSerializer, PatientLoginSerializer, ResultSerializer, AppointmentSerializer, \
+    NotificationViewSerializer, NotificationSerializer, AppointmentCancelSerializer, AddRatingSerializer
+from .tasks import upload_pdf, send_request_notification, request_updated, send_appointment_message, \
+    send_appointment_canceled_message
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s: %(levelname)s: %(message)s')
@@ -106,7 +103,7 @@ class AddAppointmentView(CreateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        send_request_notification.delay(appointment.id)
+        send_request_notification.delay(request.data.appointment)  # check
 
         return Response(serializer.data, content_type="application/json")
 
@@ -626,31 +623,28 @@ class ProfileView(GenericAPIView):
         return Response(data, content_type="application/json")
 
 
-class RatingAddView(CreateAPIView):
-    permission_classes = [AllowAny]
-    serializer_class = UserRatingSerializer
-
-    def create(self, request, **kwargs):
-        try:
-            param = self.request.query_params.get('pk', default=None)
-            if param is None:
-                return Response('Please add primary key.')
-
-            lab = Lab.objects.get(pk=param)
-
-        except Lab.DoesNotExist:
-            return Response({'Failure': 'Lab you are willing to rate does not exist.'},
-                            status.HTTP_404_NOT_FOUND)
-
-        serializer = UserRatingSerializer(data=request.data)
+class RatingAddView(GenericAPIView):
+    def post(self, request):
+        serializer = AddRatingSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
 
-        rating = UserRating.objects.last()
-        rating.lab = lab
-        rating.save(update_fields=['lab'])
+        lab_pk = serializer.validated_data['pk']
+        rating = serializer.validated_data['rating']
 
-        return Response(serializer.data, content_type="application/json")
+        try:
+            lab = Lab.objects.get(pk=lab_pk)
+        except Lab.DoesNotExist:
+            return Response({'Failure': 'Lab does not exist.'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        user_rating, created = UserRating.objects.get_or_create(
+            user=request.user,
+            lab=lab,
+        )
+        user_rating.rating = rating
+        user_rating.save()
+
+        return Response({'Success': 'Rating added.'}, status=status.HTTP_201_CREATED)
 
 
 class ResultAddView(CreateAPIView):
@@ -700,8 +694,82 @@ class AppointmentUpdateView(GenericAPIView):
             return Response(data=serializer.validated_data, content_type="application/json",
                             status=status.HTTP_202_ACCEPTED)
 
+
 # Define a signal receiver function that calls the `date_added_notification` task
 @receiver(post_save, sender=Appointment)
 def appointment_saved(sender, instance, created, **kwargs):
     if instance.date is not None:
         request_updated.delay(instance.id)
+
+
+class NotificationConfirmView(CreateAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = NotificationSerializer
+
+    def put(self, request):
+        try:
+            param = self.request.query_params.get('pk', default=None)
+            if param is None:
+                return Response('Please add primary key.')
+
+            notification = Notification.objects.get(pk=param)
+
+        except Notification.DoesNotExist:
+            return Response({'Failure': 'Notification you are trying to confirm does not exist.'},
+                            status.HTTP_404_NOT_FOUND)
+
+        notification.is_confirmed = True
+        notification.notification_appointment.status = 1
+        notification.notification_appointment.save(update_fields=['status'])
+        notification.save(update_fields=['is_confirmed'])
+
+        send_appointment_message.delay()
+
+        return Response("Notification confirmed successfully.")
+
+
+# can maybe be removed since it false per default, reconsider
+class NotificationDeclineView(CreateAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = NotificationSerializer
+
+    def put(self, request):
+        try:
+            param = self.request.query_params.get('pk', default=None)
+            if param is None:
+                return Response('Please add primary key.')
+
+            notification = Notification.objects.get(pk=param)
+
+        except Notification.DoesNotExist:
+            return Response({'Failure': 'Notification you are trying to decline does not exist.'},
+                            status.HTTP_404_NOT_FOUND)
+
+        notification.is_confirmed = False
+        notification.save(update_fields=['is_confirmed'])
+
+        return Response("Notification declined successfully.")
+
+
+class AppointmentCancelView(UpdateAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = AppointmentSerializer
+
+    def put(self, request):
+        try:
+            param = self.request.query_params.get('pk', default=None)
+            if param is None:
+                return Response('Please add primary key.')
+
+            appointment = Appointment.objects.get(pk=param)
+
+        except Appointment.DoesNotExist:
+            return Response({'Failure': 'Appointment you are trying to cancel does not exist.'},
+                            status.HTTP_404_NOT_FOUND)
+
+        appointment.status = 2
+        appointment.save(update_fields=['status'])
+
+        send_appointment_canceled_message.delay(appointment.id)
+
+        return Response("Apppointment canceled successfully.")

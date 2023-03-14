@@ -179,11 +179,10 @@ class Result(models.Model):
 class Notification(models.Model):
     notification_lab = models.ForeignKey(Lab, related_name='notification_lab', on_delete=models.DO_NOTHING)
     notification_user = models.ForeignKey(User, related_name='notification_user', on_delete=models.DO_NOTHING)
-    notification_appointment = models.ForeignKey(Appointment, related_name='notifaction_appointment',
+    notification_appointment = models.ForeignKey(Appointment, related_name='notification_appointment',
                                                  on_delete=models.DO_NOTHING)
     message = models.TextField(default='Notification!')
     is_confirmed = models.BooleanField(default=False)
-    is_declined = models.BooleanField(default=False)
 
 
 saved_file.connect(generate_aliases_global)

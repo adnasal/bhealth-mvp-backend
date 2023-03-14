@@ -16,7 +16,8 @@ from bhealthapp.views import UserCreate, LabView, LabListView, LabServiceListVie
     UpcomingAppointmentsLabView, UpcomingAppointmentsUserView, PastAppointmentsLabView, \
     PastAppointmentsUserView, WeRecommendView, ProfileView, PatientsView, ResultView, RequestsView, LabAddView, \
     LabRemoveView, UserLogin, LabCreate, RatingAddView, ResultAddView, UserUpdateView, LabUpdateView, \
-    AddAppointmentView, AppointmentView, NotificationListView, AppointmentUpdateView
+    AddAppointmentView, AppointmentView, NotificationListView, AppointmentUpdateView, NotificationConfirmView, \
+    NotificationDeclineView, AppointmentCancelView
 
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
@@ -41,11 +42,14 @@ urlpatterns = [
                   url(r'api/v1/login', UserLogin.as_view(), name='login'),
                   url(r'^api/v1/labs', LabListView.as_view(), name='labs'),
                   url(r'^api/v1/notifications', NotificationListView.as_view(), name='notifications'),
+                  url(r'^api/v1/confirm_notification', NotificationConfirmView.as_view(), name='confirm_notification'),
+                  url(r'^api/v1/decline_notification', NotificationDeclineView.as_view(), name='decline_notification'),
                   url(r'^api/v1/lab_services', LabServiceListView.as_view(), name='lab_services'),
                   url(r'^api/v1/edit_profile_user', UserUpdateView.as_view(), name='edit_profile_user'),
                   url(r'^api/v1/edit_profile_lab', LabUpdateView.as_view(), name='edit_profile_lab'),
                   url(r'^api/v1/add_appointment', AddAppointmentView.as_view(), name='add_appointment'),
                   url(r'^api/v1/update_appointment', AppointmentUpdateView.as_view(), name='update_appointment'),
+                  url(r'^api/v1/cancel_appointment', AppointmentCancelView.as_view(), name='cancel_appointment'),
                   url(r'^api/v1/results', ResultListView.as_view(), name='results_per_lab'),
                   url(r'^api/v1/appointment', AppointmentView.as_view(), name='get_appointment'),
                   url(r'^api/v1/upcoming_appointments', UpcomingAppointmentsUserView.as_view(),

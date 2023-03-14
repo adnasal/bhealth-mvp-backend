@@ -1,16 +1,16 @@
 import json
 from datetime import date
-from django.core.serializers import serialize
-from django.conf import settings
+
 import pika
 from django.conf import settings
+from django.core.serializers import serialize
 
 today = date.today()
 
 from .serializers import ResultSerializer
 
 from celery import shared_task
-from .models import Result, Appointment, Notification
+from .models import Result, Appointment
 
 
 @shared_task
@@ -83,6 +83,43 @@ def request_updated(appointment_id):
     channel.basic_publish(exchange='',
                           routing_key='appointment_updates',
                           body=message)
+    connection.close()
+
+    return "Done"
+
+
+@shared_task
+def send_appointment_message():
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+
+    channel.queue_declare(queue='appointment')
+
+    message = "New appointment has been added."
+    channel.basic_publish(exchange='',
+                          routing_key='appointment',
+                          body=message)
+    connection.close()
+
+    return "Done"
+
+
+@shared_task
+def send_appointment_canceled_message(appointment_id):
+    # Connect to RabbitMQ
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+
+    # Declare the queue
+    channel.queue_declare(queue='appointment_canceled')
+
+    # Send the message
+    message = f'Appointment {appointment_id} has been canceled.'
+    channel.basic_publish(exchange='',
+                          routing_key='appointment_canceled',
+                          body=message)
+
+    # Close the connection
     connection.close()
 
     return "Done"
