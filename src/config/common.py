@@ -3,13 +3,15 @@ import sys
 from datetime import timedelta
 from os.path import join
 
-import dotenv
 
+import dotenv
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MyProject.settings')
 
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
+
+import django_heroku
 
 TESTING = sys.argv[1:2] == ['test']
 
@@ -88,7 +90,7 @@ EMAIL_FROM = os.getenv('EMAIL_FROM', 'noreply@somehost.local')
 
 # Celery
 BROKER_URL = os.getenv('CELERY_BROKER_URL', 'amqp://guest:guest@localhost:5672//')
-#CELERY_RESULT_BACKEND = 'rpc://'
+# CELERY_RESULT_BACKEND = 'rpc://'
 
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379')
 
@@ -369,6 +371,4 @@ RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD', 'guest')
 RABBITMQ_VHOST = os.environ.get('RABBITMQ_VHOST', '/')
 RABBITMQ_EXCHANGE = os.environ.get('RABBITMQ_EXCHANGE', 'my_exchange')
 
-
-import django_heroku
 django_heroku.settings(locals())
