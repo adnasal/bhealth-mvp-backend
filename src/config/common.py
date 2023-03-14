@@ -16,7 +16,7 @@ TESTING = sys.argv[1:2] == ['test']
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 if not TESTING:
-    dotenv.read_dotenv(ROOT_DIR)
+    dotenv.load_dotenv(ROOT_DIR)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -369,3 +369,6 @@ RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD', 'guest')
 RABBITMQ_VHOST = os.environ.get('RABBITMQ_VHOST', '/')
 RABBITMQ_EXCHANGE = os.environ.get('RABBITMQ_EXCHANGE', 'my_exchange')
 
+
+import django_heroku
+django_heroku.settings(locals())
