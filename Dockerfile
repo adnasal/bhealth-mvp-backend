@@ -24,6 +24,9 @@ COPY ./requirements/ ./requirements
 ENV PATH="/root/.local/bin:$PATH"
 RUN pip install -r ./requirements/${REQUIREMENTS_FILE}
 
+ENV PORT=8000
+CMD sh -c 'wait-for $DATABASE_HOST:$DATABASE_PORT -- python manage.py runserver 0.0.0.0:$PORT'
+
 COPY . ./
 
 

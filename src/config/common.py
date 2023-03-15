@@ -5,6 +5,13 @@ from os.path import join
 
 
 import dotenv
+import os
+from django.core.wsgi import get_wsgi_application
+
+application = get_wsgi_application()
+
+port = int(os.environ.get('PORT', 8000))
+application.run(port=port)
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MyProject.settings')
 
@@ -119,7 +126,7 @@ DATABASES = {
         'USER': os.getenv('DB_USER', 'user'),
         'PASSWORD': os.getenv('DB_PASSWORD', 'password'),
         'HOST': os.getenv('DB_HOST', 'db'),
-        'PORT': os.getenv('DB_PORT'),
+        'PORT': os.getenv('DB_PORT', 5432),
     }
 }
 
