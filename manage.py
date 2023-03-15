@@ -14,4 +14,9 @@ if __name__ == "__main__":
             "forget to activate a virtual environment?"
         ) from exc
         raise
-    execute_from_command_line(sys.argv)
+    import os
+
+    port = int(os.environ.get('PORT', 8000))
+    execute_from_command_line(sys.argv, default_port=port)
+
+

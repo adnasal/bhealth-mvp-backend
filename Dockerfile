@@ -23,4 +23,4 @@ RUN pip install -r ./requirements/${REQUIREMENTS_FILE}
 COPY . ./
 
 ENV PORT=8000
-CMD sh -c 'wait-for $DATABASE_HOST:$DATABASE_PORT -- gunicorn --bind 0.0.0.0:$PORT myapp.wsgi'
+CMD sh -c 'wait-for $DATABASE_HOST:$DATABASE_PORT -- gunicorn --bind 0.0.0.0:$PORT src.wsgi'

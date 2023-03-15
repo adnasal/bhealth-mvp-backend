@@ -3,9 +3,9 @@ import sys
 from datetime import timedelta
 from os.path import join
 
-
 import dotenv
-import os
+
+PORT = int(os.environ.get("PORT", 8000))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MyProject.settings')
 
