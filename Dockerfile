@@ -1,11 +1,10 @@
 FROM python:3.10
+FROM python:3.10
 
 ARG REQUIREMENTS_FILE
 
 WORKDIR /app
-EXPOSE 80
 ENV PYTHONUNBUFFERED 1
-
 
 RUN set -x && \
 	apt-get update && \
@@ -15,18 +14,13 @@ RUN set -x && \
 	wget -O /wait-for https://raw.githubusercontent.com/eficode/wait-for/master/wait-for && \
 	chmod +x /wait-for
 
-CMD ["sh", "/entrypoint-web.sh"]
 COPY ./docker/ /
-
 COPY ./requirements/ ./requirements
-
 
 ENV PATH="/root/.local/bin:$PATH"
 RUN pip install -r ./requirements/${REQUIREMENTS_FILE}
 
-ENV PORT=8000
-CMD sh -c 'wait-for $DATABASE_HOST:$DATABASE_PORT -- python manage.py runserver 0.0.0.0:$PORT'
-
 COPY . ./
 
-
+ENV PORT=8000
+CMD sh -c 'wait-for $DATABASE_HOST:$DATABASE_PORT -- gunicorn --bind 0.0.0.0:$PORT myapp.wsgi'
