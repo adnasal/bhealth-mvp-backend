@@ -144,6 +144,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
+DISABLE_COLLECTSTATIC = 0
 
 # Media files
 MEDIA_ROOT = join(os.path.dirname(BASE_DIR), 'media')
