@@ -31,7 +31,7 @@ class NotificationListViewPaginationTestCase(APITestCase):
 
 class LabListViewTest(APITestCase):
     def setUp(self):
-        # create some test Lab objects
+
         self.lab1 = LabFactory
         self.lab2 = LabFactory
         self.lab3 = LabFactory
@@ -48,8 +48,8 @@ class LabListViewTest(APITestCase):
 
 class LabServiceListViewTests(APITestCase):
     def setUp(self):
-        self.url = reverse('lab-service-list')
-        # Create some lab services for testing
+        self.url = reverse('lab_services')
+
         self.lab_service_1 = LabServiceFactory
         self.lab_service_2 = LabServiceFactory
         self.lab_service_3 = LabServiceFactory
@@ -80,7 +80,7 @@ class ResultListViewTest(APITestCase):
             appointment=self.appointment, report="Some report")
 
     def test_list_results_by_patient(self):
-        url = reverse('result-list')
+        url = reverse('results')
         query_params = f"?patient={self.patient.id}"
         response = self.client.get(f"{url}{query_params}")
 
@@ -91,7 +91,7 @@ class ResultListViewTest(APITestCase):
         self.assertEqual(response.data, expected_data)
 
     def test_list_results_by_appointment(self):
-        url = reverse('result-list')
+        url = reverse('results')
         query_params = f"?appointment={self.appointment.id}"
         response = self.client.get(f"{url}{query_params}")
 
@@ -102,7 +102,7 @@ class ResultListViewTest(APITestCase):
         self.assertEqual(response.data, expected_data)
 
     def test_list_results_with_invalid_params(self):
-        url = reverse('result-list')
+        url = reverse('results')
         query_params = "?invalid=param"
         response = self.client.get(f"{url}{query_params}")
 
@@ -110,7 +110,7 @@ class ResultListViewTest(APITestCase):
 
 
 class UpcomingAppointmentsUserViewTestCase(APITestCase):
-    url = reverse('appointments:user_upcoming_appointments')
+    url = reverse('user_upcoming_appointments')
 
     def setUp(self):
         self.user = UserFactory
@@ -127,7 +127,7 @@ class UpcomingAppointmentsUserViewTestCase(APITestCase):
 
 
 class PastAppointmentsUserViewTestCase(APITestCase):
-    url = reverse('past_appointments_user')
+    url = reverse('user_past_appointments')
 
     def setUp(self):
         self.patient_id = 1
@@ -149,7 +149,7 @@ class PastAppointmentsUserViewTestCase(APITestCase):
 
 class RequestsViewPaginationTestCase(APITestCase):
     def setUp(self):
-        # create some appointments with status 0 for testing
+
         self.lab_1 = LabFactory
         self.lab_2 = LabFactory
         self.user_1 = UserFactory
@@ -159,7 +159,7 @@ class RequestsViewPaginationTestCase(APITestCase):
         self.appointment_3 = AppointmentFactory
 
     def test_pagination(self):
-        # set up the request with some query parameters
+
         url = reverse('requests')
         query_params = {
             'lab_appointment': self.lab_1.id,
@@ -207,7 +207,7 @@ class PatientsViewPaginationTestCase(APITestCase):
         self.patient3 = User.objects.create(username='patient3', lab=self.lab2)
         self.patient4 = User.objects.create(username='patient4', lab=self.lab2)
 
-        self.url = reverse('patients-list')
+        self.url = reverse('patients')
 
     def test_pagination(self):
         response = self.client.get(self.url, {'lab': self.lab1.pk, 'page': 1, 'page_size': 2})
@@ -230,7 +230,7 @@ class TestWeRecommendViewPagination(APITestCase):
                 UserRating.objects.create(user=User.objects.create(username=f"user{j}"), lab=lab, rating=5)
 
     def test_pagination(self):
-        response = self.client.get(reverse('we-recommend'), {'page': 2, 'page_size': 5})
+        response = self.client.get(reverse('top_labs'), {'page': 2, 'page_size': 5})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Check the number of items returned in the response

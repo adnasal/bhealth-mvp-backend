@@ -96,17 +96,12 @@ class AddAppointmentView(CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = AppointmentSerializer
 
-    def create(self, request, **kwargs):
-        data = request.data.copy()
-        data['status'] = Appointment.STATUS_PENDING
-        serializer = AppointmentSerializer(data=request.data)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        appointment = serializer.save()
 
-        send_request_notification.delay(request.data.appointment)  # check
-
-        return Response(serializer.data, content_type="application/json")
-
+        return Response({"status": "success", "appointment_id": appointment.id})
 
 class UserLogin(GenericAPIView):
     serializer_class = PatientLoginSerializer
@@ -718,29 +713,6 @@ class NotificationConfirmView(CreateAPIView):
         send_appointment_message.delay()
 
         return Response("Notification confirmed successfully.")
-
-
-# can maybe be removed since it false per default, reconsider
-class NotificationDeclineView(CreateAPIView):
-    permission_classes = [AllowAny]
-    serializer_class = NotificationSerializer
-
-    def put(self, request):
-        try:
-            param = self.request.query_params.get('pk', default=None)
-            if param is None:
-                return Response('Please add primary key.')
-
-            notification = Notification.objects.get(pk=param)
-
-        except Notification.DoesNotExist:
-            return Response({'Failure': 'Notification you are trying to decline does not exist.'},
-                            status.HTTP_404_NOT_FOUND)
-
-        notification.is_confirmed = False
-        notification.save(update_fields=['is_confirmed'])
-
-        return Response("Notification declined successfully.")
 
 
 class AppointmentCancelView(UpdateAPIView):
