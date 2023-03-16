@@ -15,7 +15,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.generics import (
     CreateAPIView, GenericAPIView, DestroyAPIView, ListAPIView, get_object_or_404, UpdateAPIView
 )
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Lab, LabService, Result, Appointment, User, UserRating, Notification
@@ -110,6 +110,7 @@ class AddAppointmentView(CreateAPIView):
 
 class UserLogin(GenericAPIView):
     serializer_class = PatientLoginSerializer
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         if request.method == "POST":
