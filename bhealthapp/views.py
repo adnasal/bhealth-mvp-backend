@@ -22,7 +22,7 @@ from .models import Lab, LabService, Result, Appointment, User, UserRating, Noti
 from .serializers import LabSerializer, LabServiceViewSerializer, UserRatingViewSerializer, ResultViewSerializer, \
     PatientSerializer, PatientViewSerializer, LabViewSerializer, \
     AppointmentViewSerializer, PatientLoginSerializer, ResultSerializer, AppointmentSerializer, \
-    NotificationViewSerializer, NotificationSerializer, AppointmentCancelSerializer, AddRatingSerializer
+    NotificationViewSerializer, NotificationSerializer, AddRatingSerializer
 from .tasks import upload_pdf, send_request_notification, request_updated, send_appointment_message, \
     send_appointment_canceled_message
 
@@ -156,7 +156,7 @@ class NotificationListView(ListAPIView):
     serializer_class = NotificationViewSerializer
     ordering = ['-id']
     pagination_class = CustomPagination
-    search_fields = ['notification_lab', 'notification_user', 'notification_appointment']
+    search_fields = ['notification_appointment']
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
 
     def get_queryset(self, *args, **kwargs):
@@ -167,13 +167,7 @@ class NotificationListView(ListAPIView):
 
         queryset = Notification.objects.all().order_by('id')
 
-        if param.get('notification_lab') is not None:
-            query_set = queryset.filter(notification_lab=param.get('notification_lab'))
-
-        elif param.get('notification_user') is not None:
-            query_set = queryset.filter(notification_user=param.get('notification_user'))
-
-        elif param.get('notification_appointment') is not None:
+        if param.get('notification_appointment') is not None:
             query_set = queryset.filter(notification_appointment=param.get('notification_appointment'))
 
         else:
@@ -371,7 +365,7 @@ class ResultListView(ListAPIView):
         if param.get('patient') is not None:
 
             patient = param.get('patient')
-            query_set = Result.objects.filter(patient=patient)
+            query_set = Result.objects.filter(appointment__patient=patient)
 
         elif param.get('appointment') is not None:
 
@@ -401,8 +395,6 @@ class ResultView(GenericAPIView):
         data = serializer.data
 
         return Response(data, content_type="application/json")
-    # add options for patient id search
-    # add to get per appointment id
 
 
 class AppointmentView(GenericAPIView):
@@ -553,7 +545,6 @@ class RequestsView(ListAPIView):
             lab = param.get('lab_appointment')
 
             query_set = Appointment.objects.filter(lab_appointment=lab, status=0)
-
 
         else:
             query_set = Appointment.objects.none()

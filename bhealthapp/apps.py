@@ -10,4 +10,4 @@ class BHealthCaching(AppConfig):
     name = 'bhealth_cache'
 
     def ready(self):
-        import signals
+        pass

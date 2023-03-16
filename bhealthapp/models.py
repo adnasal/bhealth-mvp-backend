@@ -55,15 +55,12 @@ class User(AbstractUser):
     username = models.CharField(null=False, max_length=150, unique=True)
     profile_picture = models.ImageField(default='default.jpg', upload_to='profile_pics', null=True)
     profile_link = models.CharField(max_length=255, blank=True, null=True, default=None)
-    name = models.TextField(null=False, max_length=20)
-    surname = models.TextField(null=False, max_length=30)
     password = models.CharField(max_length=255)  # add forms.py
     phone_number = models.CharField(max_length=255)
     email = models.TextField(null=False, max_length=255)
     dob = models.DateTimeField(null=True)
     address = models.TextField(max_length=80, null=True, default=None)
     city = models.ForeignKey(City, related_name='user_city', on_delete=models.DO_NOTHING, default=1)
-    joined_at = models.DateTimeField(auto_now_add=True, null=True)
     is_blocked = models.BooleanField(default=False)
     is_email_verified = models.BooleanField(default=False)
     gender = models.PositiveSmallIntegerField(
@@ -139,7 +136,6 @@ class Type(models.Model):
 class Service(models.Model):
     name = models.TextField(null=False, max_length=255, default=None)
     duration = models.DurationField(default=30)
-    description = models.TextField(null=False, max_length=1000, default='Service Description')
     type = models.ForeignKey(Type, related_name='service_type', on_delete=models.DO_NOTHING)
 
 
@@ -149,7 +145,6 @@ class LabService(models.Model):
 
 
 class Appointment(models.Model):
-    city_appointment = models.TextField(default='Sarajevo')
     lab_appointment = models.ForeignKey(Lab, related_name='lab_name_appointment', on_delete=models.DO_NOTHING)
     service_appointment = models.ForeignKey(Service, related_name='service_appointment', on_delete=models.DO_NOTHING)
     patient = models.ForeignKey(User, related_name='patient', on_delete=models.DO_NOTHING)
@@ -177,8 +172,6 @@ class Result(models.Model):
 
 
 class Notification(models.Model):
-    notification_lab = models.ForeignKey(Lab, related_name='notification_lab', on_delete=models.DO_NOTHING)
-    notification_user = models.ForeignKey(User, related_name='notification_user', on_delete=models.DO_NOTHING)
     notification_appointment = models.ForeignKey(Appointment, related_name='notification_appointment',
                                                  on_delete=models.DO_NOTHING)
     message = models.TextField(default='Notification!')

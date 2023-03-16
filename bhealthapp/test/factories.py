@@ -3,7 +3,8 @@ from datetime import datetime
 import factory
 from faker import Faker
 
-from bhealthapp.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Result, Appointment, Notification
+from bhealthapp.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Result, Appointment, \
+    Notification
 
 fake = Faker()
 
@@ -37,15 +38,12 @@ class UserFactory(factory.django.DjangoModelFactory):
             username="TestUsername",
             profile_picture="TestPicture.jpg",
             profile_link="TestLink.com",
-            name="TestName",
-            surname="TestSurname",
             password="1234556",
             phone_number="003875352",
             email="test@email.com",
             dob=datetime.now(),
             address="TestAddress",
             city=1,
-            joined_at=datetime.now(),
             is_blocked=False,
             is_email_verified=True,
             gender=0
@@ -110,7 +108,6 @@ class ServiceFactory(factory.django.DjangoModelFactory):
         service = Service.objects.create(
             name="TestName",
             duration=datetime.timedelta(days=-1, seconds=68400),
-            description="TestDescription",
             type=1
         )
 
@@ -121,7 +118,6 @@ class AppointmentFactory(factory.django.DjangoModelFactory):
 
     def create_appointment(self):
         appointment = Appointment.objects.create(
-            city_appointment="TestCity",
             lab_appointment=1,
             service_appointment=1,
             patient=3,
@@ -137,7 +133,6 @@ class ResultFactory(factory.django.DjangoModelFactory):
     def create_result(self):
         result = Result.objects.create(
             appointment=1,
-            patient=3,
             pdf="Test.pdf"
         )
 
@@ -148,8 +143,6 @@ class NotificationFactory(factory.django.DjangoModelFactory):
 
     def create_notification(self):
         notification = Notification.objects.create(
-            notification_lab=1,
-            notification_user=3,
             notification_appointment=1,
             message="Notification!",
             is_confirmed=False,

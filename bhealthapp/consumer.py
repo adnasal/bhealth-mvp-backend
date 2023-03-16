@@ -1,6 +1,13 @@
 import json
 
+import pika
+from django.conf import settings
+from django.core.mail import send_mail
+from django.core.management.base import BaseCommand
+from django.template.loader import render_to_string
+
 from bhealthapp.models import Lab, User
+from bhealthapp.models import Notification, Appointment
 
 
 class NewResultConsumer:
@@ -22,8 +29,6 @@ class NewResultConsumer:
 
             # Create new notification
             notification = Notification.objects.create(
-                notification_lab=appointments[0].lab,
-                notification_user=appointments[0].patient,
                 notification_appointment=appointments[0],
                 message=notification_message,
                 is_confirmed=True,
@@ -58,8 +63,6 @@ class RequestConsumer:
         appointment = Appointment.objects.create(lab=lab, service_name=service_name, date=date)
         notification_message = f'New request for {service_name} on {date}'
         notification = Notification.objects.create(
-            notification_lab=lab,
-            notification_user=user,
             notification_appointment=appointment,
             message=notification_message,
             is_confirmed=False,
@@ -96,9 +99,6 @@ class AppointmentUpdatesConsumer:
         # Send notification to the user
         notification_message = f'Appointment request updated, please confirm or decline: {appointment}'
         notification = Notification.objects.create(
-
-            notification_lab=appointment.lab_appointment,
-            notification_user=appointment.patient,
             notification_appointment=appointment,
             message=notification_message,
             is_confirmed=False,
@@ -109,9 +109,6 @@ class AppointmentUpdatesConsumer:
 if __name__ == '__main__':  # check this part
     consumer = AppointmentUpdatesConsumer()
     consumer.start()
-
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
 
 
 class AppointmentConsumer:
@@ -136,8 +133,6 @@ class AppointmentConsumer:
     def send_notification(self, user, lab, appointment):
         # Create the notification
         notification = Notification.objects.create(
-            notification_lab=lab,
-            notification_user=user,
             notification_appointment=appointment,
             message='New appointment has been added.'
         )
@@ -163,13 +158,8 @@ class AppointmentConsumer:
 consumer = AppointmentConsumer()
 consumer.start()
 
-import pika
-from django.conf import settings
-from django.core.management.base import BaseCommand
-from bhealthapp.models import Notification, Appointment
 
-
-class NotificationConsumer: # CHANGE NAME TO CANCEL APP
+class NotificationConsumer:  # CHANGE NAME TO CANCEL APP
     def __init__(self):
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=settings.RABBITMQ_HOST))
         self.channel = self.connection.channel()
@@ -185,9 +175,9 @@ class NotificationConsumer: # CHANGE NAME TO CANCEL APP
             appointment = Appointment.objects.get(id=appointment_id)
             user = appointment.patient
             lab = appointment.lab_appointment
-            notification = Notification.objects.create(notification_lab=lab, notification_user=user,
-                                                       notification_appointment=appointment,
-                                                       message='Your appointment has been canceled.')
+            notification = Notification.objects.create(
+                notification_appointment=appointment,
+                message='Your appointment has been canceled.')
             notification.save()
         except Appointment.DoesNotExist:
             pass

@@ -1,4 +1,3 @@
-from django.urls import reverse
 import collections
 
 from django.contrib.auth.models import User

@@ -33,15 +33,12 @@ class UserFactory(factory.django.DjangoModelFactory):
     username = fake.username()
     profile_picture = 'fake.jpg'
     profile_link = "http://profilelink.com"
-    name = fake.name()
-    surname = fake.surname()
     password = fake.password()
     phone_number = "0303030330"
     email = fake.email()
     dob = factory.Faker("date_time", tzinfo=timezone.utc)
     address = fake.text()
     city = CityFactory
-    joined_at = factory.Faker("date_time", tzinfo=timezone.utc)
     is_blocked = False
     is_email_verified = False
     gender = 0
@@ -84,7 +81,6 @@ class ServiceFactory(factory.django.DjangoModelFactory):
 
 name = fake.name()
 duration = datetime.timedelta(days=-1, seconds=68400),
-description = fake.text()
 type = TypeFactory
 
 
@@ -100,7 +96,6 @@ class AppointmentFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Appointment
 
-    city_appointment = fake.text()
     lab_appointment = LabFactory
     service_appointment = ServiceFactory
     patient = UserFactory
@@ -113,7 +108,6 @@ class ResultFactory(factory.django.DjangoModelFactory):
         model = Result
 
     appointment = AppointmentFactory
-    patient = UserFactory
     pdf = "Result.pdf"
 
 
@@ -121,8 +115,6 @@ class NotificationFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Notification
 
-    notification_lab = LabFactory
-    notification_user = UserFactory
     notification_appointment = AppointmentFactory
     message = "Notification!"
     is_confirmed = False

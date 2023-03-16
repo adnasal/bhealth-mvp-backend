@@ -12,8 +12,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MyProject.settings')
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
-import django_heroku
-
 TESTING = sys.argv[1:2] == ['test']
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -373,5 +371,3 @@ RABBITMQ_USER = os.environ.get('RABBITMQ_USER', 'guest')
 RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD', 'guest')
 RABBITMQ_VHOST = os.environ.get('RABBITMQ_VHOST', '/')
 RABBITMQ_EXCHANGE = os.environ.get('RABBITMQ_EXCHANGE', 'my_exchange')
-
-django_heroku.settings(locals())

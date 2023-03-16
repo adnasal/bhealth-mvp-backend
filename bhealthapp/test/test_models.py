@@ -5,7 +5,6 @@ from django.test import TestCase
 
 from bhealthapp.models import Country, City, User, Lab, UserRating, Type, Service, LabService, Result, Appointment, \
     Notification
-
 from bhealthapp.test.factories_meta import ServiceFactory, CityFactory, CountryFactory, LabFactory, LabServiceFactory, \
     ResultFactory, AppointmentFactory, UserFactory, UserRatingFactory, TypeFactory, NotificationFactory
 
@@ -86,18 +85,6 @@ class TestUser(TestCase):
         self.assertEqual(field_label, 'profile link')
         """Test Models: User profile link -> Working"""
 
-    def test_user_name_label(self):
-        user = self.user
-        field_label = user._meta.get_field('name').verbose_name
-        self.assertEqual(field_label, 'name')
-        """Test Models: User name -> Working"""
-
-    def test_user_surname_label(self):
-        user = self.user
-        field_label = user._meta.get_field('surname').verbose_name
-        self.assertEqual(field_label, 'surname')
-        """Test Models: User surname -> Working"""
-
     def test_password_max_length(self):
         user = self.user
         max_length = user._meta.get_field('password').max_length
@@ -132,12 +119,6 @@ class TestUser(TestCase):
         field_label = user._meta.get_field('city').verbose_name
         self.assertEqual(field_label, 'city')
         """Test Models: User city -> Working"""
-
-    def test_joined_at_label(self):
-        user = self.user
-        field_label = user._meta.get_field('joined_at').verbose_name
-        self.assertEqual(field_label, 'joined_at')
-        """Test Models: User joined at -> Working"""
 
     def test_default_is_blocked_false(self):
         user = self.user
@@ -286,12 +267,6 @@ class TestService(TestCase):
 
         """Test Models: Service duration -> Working"""
 
-    def test_service_model_description(self):
-        service_test = self.service
-        field_label = service_test._meta.get_field('description').verbose_name
-        self.assertEqual(field_label, 'description')
-        """Test Models: Service description -> Working"""
-
     def test_service_model_type(self):
         service_test = self.service
         field_label = service_test._meta.get_field('type').verbose_name
@@ -336,13 +311,6 @@ class TestAppointment(TestCase):
         appointment_test = self.appointment
         self.assertTrue(isinstance(appointment_test, Appointment))
         """Test Models: Appointment creation -> Working"""
-
-    def test_city_appointment(self):
-        appointment_test = self.appointment
-        field_label = appointment_test._meta.get_field('city_appointment').verbose_name
-        self.assertEqual(field_label, 'city appointment')
-
-        """Test Models: City of appointment -> Working"""
 
     def test_lab_appointment(self):
         appointment_test = self.appointment
@@ -391,13 +359,6 @@ class TestResult(TestCase):
         self.assertTrue(isinstance(result_test, Result))
         """Test Models: Result creation -> Working"""
 
-    def test_patient(self):
-        result_test = self.result
-        field_label = result_test._meta.get_field('patient').verbose_name
-        self.assertEqual(field_label, 'patient')
-
-        """"Test Models: Result patient -> Working"""
-
     def test_appointment(self):
         result_test = self.result
         field_label = result_test._meta.get_field('appointment').verbose_name
@@ -420,20 +381,6 @@ class TestNotification(TestCase):
         notification_test = self.notification
         self.assertTrue(isinstance(notification_test, Notification))
         """Test Models: Notification creation -> Working"""
-
-    def test_notification_lab(self):
-        notification_test = self.notification
-        field_label = notification_test._meta.get_field('notification_lab').verbose_name
-        self.assertEqual(field_label, 'notification lab')
-
-        """"Test Models: Notification lab -> Working"""
-
-    def test_notification_user(self):
-        notification_test = self.notification
-        field_label = notification_test._meta.get_field('notification_user').verbose_name
-        self.assertEqual(field_label, 'notification user')
-
-        """"Test Models: Notification user -> Working"""
 
     def test_notification_appointment(self):
         notification_test = self.notification

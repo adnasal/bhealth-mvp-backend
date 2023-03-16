@@ -1,5 +1,4 @@
 FROM python:3.10
-FROM python:3.10
 
 ARG REQUIREMENTS_FILE
 
@@ -16,11 +15,10 @@ RUN set -x && \
 
 COPY ./docker/ /
 COPY ./requirements/ ./requirements
+COPY requirements.txt requirements.txt
 
 ENV PATH="/root/.local/bin:$PATH"
-RUN pip install -r ./requirements/${REQUIREMENTS_FILE}
+RUN pip install -r requirements.txt
 
 COPY . ./
 
-ENV PORT=8000
-CMD sh -c 'wait-for $DATABASE_HOST:$DATABASE_PORT -- gunicorn --bind 0.0.0.0:$PORT src.wsgi'

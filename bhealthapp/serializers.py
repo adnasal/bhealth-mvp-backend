@@ -1,11 +1,7 @@
-from distutils.command.upload import upload
-
-from django.core.files.storage import FileSystemStorage
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 from .models import Appointment, Lab, User, Type, City, Service, Result, UserRating, LabService, Notification
-from src.files.models import File
 
 
 class ChoiceField(serializers.ChoiceField):
@@ -82,15 +78,12 @@ class PatientSerializer(serializers.ModelSerializer):
             "profile_picture",
             "profile_link",
             "username",
-            "name",
-            "surname",
             "password",
             "phone_number",
             "email",
             "dob",
             "address",
             "city",
-            "joined_at",
             "is_blocked",
             "is_email_verified",
             "gender",
@@ -105,15 +98,12 @@ class PatientViewSerializer(serializers.ModelSerializer):
         fields = [
             "profile_picture",
             "profile_link",
-            "name",
-            "surname",
             "password",
             "phone_number",
             "email",
             "dob",
             "address",
             "city",
-            "joined_at",
             "is_blocked",
             "is_email_verified",
             "gender",
@@ -215,7 +205,6 @@ class ServiceSerializer(serializers.ModelSerializer):
         fields = [
             "name",
             "duration",
-            "description",
             "type",
         ]
 
@@ -226,89 +215,79 @@ class ServiceViewSerializer(serializers.ModelSerializer):
         fields = [
             "name",
             "duration",
-            "description",
             "type",
         ]
         depth = 1
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
+    lab_appointment = serializers.SerializerMethodField()
+    service_appointment = serializers.SerializerMethodField()
+    patient = serializers.SerializerMethodField()
 
-        lab_appointment = serializers.SerializerMethodField()
-        service_appointment = serializers.SerializerMethodField()
-        patient = serializers.SerializerMethodField()
-        class Meta:
-            model = Appointment
-            fields = [
-                "city_appointment",
-                "lab_appointment",
-                "service_appointment",
-                "date",
-                "patient",
-                "status",
-            ]
+    class Meta:
+        model = Appointment
+        fields = [
+            "lab_appointment",
+            "service_appointment",
+            "date",
+            "patient",
+            "status",
+        ]
 
-        def get_lab_appointment(self, obj):
-            lab = obj.lab_appointment
-            return {
-                'id': lab.id,
-                'name': lab.name,
-                'password': lab.password,
-                'address': lab.address,
-                'phone_number': lab.phone_number,
-                'email': lab.email,
-                'website': lab.website,
-                'city': {
-                    'id': lab.city.id,
-                    'name': lab.city.name,
-                    # add more fields as needed
-                },
-            }
+    def get_lab_appointment(self, obj):
+        lab = obj.lab_appointment
+        return {
+            'id': lab.id,
+            'name': lab.name,
+            'password': lab.password,
+            'address': lab.address,
+            'phone_number': lab.phone_number,
+            'email': lab.email,
+            'website': lab.website,
+            'city': {
+                'id': lab.city.id,
+                'name': lab.city.name,
+            },
+        }
 
-        def get_service_appointment(self, obj):
-            service = obj.service_appointment
-            return {
-                'id': service.id,
-                'name': service.name,
-                'duration': service.duration.total_seconds(),
-                'description': service.description,
-                'type': {
-                    'id': service.type.id,
-                    'name': service.type.name,
-                    # add more fields as needed
-                },
-            }
+    def get_service_appointment(self, obj):
+        service = obj.service_appointment
+        return {
+            'id': service.id,
+            'name': service.name,
+            'duration': service.duration.total_seconds(),
+            'type': {
+                'id': service.type.id,
+                'name': service.type.name,
+            },
+        }
 
-        def get_patient(self, obj):
-            patient = obj.patient
-            return {
-                'id': patient.id,
-                'name': patient.name,
-                'surname': patient.surname,
-                'profile_picture': patient.profile_picture.url,
-                'profile_link': patient.profile_link,
-                'phone_number': patient.phone_number,
-                'email': patient.email,
-                'dob': patient.dob,
-                'address': patient.address,
-                'city': {
-                    'id': patient.city.id,
-                    'name': patient.city.name,
-                    # add more fields as needed
-                },
-                'joined_at': patient.joined_at,
-                'is_blocked': patient.is_blocked,
-                'is_email_verified': patient.is_email_verified,
-                'gender': patient.gender,
-            }
+    def get_patient(self, obj):
+        patient = obj.patient
+        return {
+            'id': patient.id,
+            'profile_picture': patient.profile_picture.url,
+            'profile_link': patient.profile_link,
+            'phone_number': patient.phone_number,
+            'email': patient.email,
+            'dob': patient.dob,
+            'address': patient.address,
+            'city': {
+                'id': patient.city.id,
+                'name': patient.city.name,
 
+            },
+            'is_blocked': patient.is_blocked,
+            'is_email_verified': patient.is_email_verified,
+            'gender': patient.gender,
+        }
 
 
 class AppointmentViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
         fields = [
-            "city_appointment",
             "lab_appointment",
             "service_appointment",
             "date",
@@ -321,6 +300,7 @@ class AppointmentViewSerializer(serializers.ModelSerializer):
 class AddRatingSerializer(serializers.Serializer):
     pk = serializers.IntegerField()
     rating = serializers.IntegerField(min_value=1, max_value=5)
+
 
 class AppointmentCancelSerializer(serializers.Serializer):
     pk = serializers.IntegerField()
@@ -340,8 +320,6 @@ class ResultSerializer(serializers.ModelSerializer):
         ]
 
 
-
-
 class ResultViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Result
@@ -356,8 +334,6 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = [
-            "notification_lab",
-            "notification_user",
             "notification_appointment",
             "message",
             "is_confirmed",
@@ -368,8 +344,6 @@ class NotificationViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = [
-            "notification_lab",
-            "notification_user",
             "notification_appointment",
             "message",
             "is_confirmed",

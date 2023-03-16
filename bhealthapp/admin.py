@@ -30,19 +30,16 @@ class PatientAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': [
-                'profile_picture', 'profile_link', 'name', 'surname', 'password', 'phone_number', 'email', 'dob',
-                'address', 'city', 'joined_at', 'is_blocked', 'is_email_verified', 'gender']
+                'profile_picture', 'profile_link', 'password', 'phone_number', 'email', 'dob',
+                'address', 'city', 'is_blocked', 'is_email_verified', 'gender']
         }),
     )
 
-    list_display = ['profile_picture', 'profile_link', 'name', 'surname', 'password', 'phone_number', 'email', 'dob',
-                    'address', 'city', 'joined_at', 'is_blocked', 'is_email_verified', 'gender']
+    list_display = ['profile_picture', 'profile_link', 'password', 'phone_number', 'email', 'dob',
+                    'address', 'city', 'is_blocked', 'is_email_verified', 'gender']
 
-    date_hierarchy = 'joined_at'
     empty_value_display = '-empty-'
-    list_filter = ['name', 'surname', 'city', 'gender']
-    search_fields = ("name__startswith",)
-
+    list_filter = ['city', 'gender']
 
 # admin.site.register(Patient, PatientAdmin)
 
@@ -103,11 +100,11 @@ class TypeAdmin(admin.ModelAdmin):
 class ServiceAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['name', 'duration', 'description', 'type']
+            'fields': ['name', 'duration', 'type']
         }),
     )
 
-    list_display = ['name', 'duration', 'description', 'type']
+    list_display = ['name', 'duration', 'type']
     empty_value_display = '-empty-'
     list_filter = ['name', 'type']
 
@@ -119,11 +116,11 @@ class ServiceAdmin(admin.ModelAdmin):
 class AppointmentAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['city_appointment', 'lab_appointment', 'service_appointment', 'date', 'patient', 'status']
+            'fields': ['lab_appointment', 'service_appointment', 'date', 'patient', 'status']
         }),
     )
 
-    list_display = ['city_appointment', 'lab_appointment', 'service_appointment', 'date', 'patient', 'status']
+    list_display = ['lab_appointment', 'service_appointment', 'date', 'patient', 'status']
     date_hierarchy = 'date'
     empty_value_display = '-empty-'
     list_filter = ['lab_appointment', 'service_appointment', 'status', 'patient']
@@ -151,15 +148,15 @@ class ResultAdmin(admin.ModelAdmin):
 class NotificationAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['notification_lab', 'notification_user', 'notification_appointment', 'message', 'is_confirmed',
+            'fields': ['notification_appointment', 'message', 'is_confirmed',
                        ]
         }),
     )
 
-    list_display = ['notification_lab', 'notification_user', 'notification_appointment', 'message', 'is_confirmed',
+    list_display = ['notification_appointment', 'message', 'is_confirmed',
                     ]
     empty_value_display = '-empty-'
-    list_filter = ['notification_lab', 'notification_user', 'notification_appointment', 'is_confirmed',
+    list_filter = ['notification_appointment', 'is_confirmed',
                    ]
 
 # admin.site.register(Notification, NotificationAdmin)
