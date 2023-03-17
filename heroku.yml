@@ -1,0 +1,30 @@
+build:
+  docker:
+    web: Dockerfile
+run:
+  web:
+    image: registry.heroku.com/bhealth-backend/web
+    env:
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      - db
+      - queue
+      - redis
+    command:
+      - sh
+      - -c
+      - |
+        cp ./manage.py migrate
+        python manage.py collectstatic --noinput
+        gunicorn <bhealthapp>.wsgi --bind 0.0.0.0:$PORT
+release:
+  image: registry.heroku.com/bhealth-backend/web
+  command:
+    - python
+    - manage.py
+    - migrate
+  run:
+    web:
+      - python manage.py collectstatic --noinput
