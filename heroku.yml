@@ -2,22 +2,20 @@ build:
   docker:
     web: Dockerfile
 run:
-  web:
-    image: registry.heroku.com/bhealth-backend/web
-    ports:
-      - $PORT:8000
-    env:
-      DB_NAME: database
-      DB_USER: user
-      DB_PASSWORD: password
-      REDIS_URL: $REDIS_URL
-      BROKER_URL: amqp://guest:guest@localhost:5672//
-      CELERY_RESULT_BACKEND: redis://redis:6379
-    volumes:
-      - /app/.:/app
-    depends_on:
-      - db
-      - redis
+  image: registry.heroku.com/bhealth-backend/web
+  env:
+    DB_NAME: database
+    DB_USER: user
+    DB_PASSWORD: password
+    REDIS_URL: $REDIS_URL
+    BROKER_URL: amqp://guest:guest@localhost:5672//
+    CELERY_RESULT_BACKEND: redis://redis:6379
+  ports:
+    - $PORT:8000
+  depends_on:
+    - db
+    - redis
+services:
   db:
     image: postgres:14.2
     env:
@@ -28,7 +26,5 @@ run:
       - db-data:/var/lib/postgresql/data
   redis:
     image: redis:alpine
-    ports:
-      - "6379:6379"
 volumes:
   db-data:
