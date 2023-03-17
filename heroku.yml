@@ -4,27 +4,31 @@ build:
 run:
   web:
     image: registry.heroku.com/bhealth-backend/web
+    ports:
+      - $PORT:8000
     env:
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: database
+      DB_USER: user
+      DB_PASSWORD: password
+      REDIS_URL: $REDIS_URL
+      BROKER_URL: amqp://guest:guest@localhost:5672//
+      CELERY_RESULT_BACKEND: redis://redis:6379
+    volumes:
+      - /app/.:/app
     depends_on:
       - db
-      - queue
       - redis
-    command:
-      - sh
-      - -c
-      - |
-        cp ./manage.py migrate
-        python manage.py collectstatic --noinput
-        gunicorn <bhealthapp>.wsgi --bind 0.0.0.0:$PORT
-release:
-  image: registry.heroku.com/bhealth-backend/web
-  command:
-    - python
-    - manage.py
-    - migrate
-  run:
-    web:
-      - python manage.py collectstatic --noinput
+  db:
+    image: postgres:14.2
+    env:
+      POSTGRES_DB: database
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+volumes:
+  db-data:
