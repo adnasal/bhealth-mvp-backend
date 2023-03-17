@@ -3,28 +3,9 @@ build:
     web: Dockerfile
 
 run:
-  web:
-    image: registry.heroku.com/bhealth-backend/web
-    ports:
-      - $PORT:$PORT
-    depends_on:
-      - db
-    environment:
-      PYTHONUNBUFFERED: 1
-      DJANGO_SETTINGS_MODULE: src.config.local
-    volumes:
-      - staticfiles:/app/staticfiles
-      - mediafiles:/app/mediafiles
-  db:
-    image: postgres:13
-    environment:
-      POSTGRES_DB: database
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+  web: gunicorn bhealthapp.wsgi
 
-volumes:
-  postgres_data:
-  staticfiles:
-  mediafiles:
+release:
+  image: web
+  command:
+    - python manage.py migrate
