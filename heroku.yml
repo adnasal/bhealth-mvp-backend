@@ -1,35 +1,30 @@
 build:
   docker:
     web: Dockerfile
-run:
-  image: registry.heroku.com/bhealth-backend/web
-  ports:
-    - port: $PORT
-  environment:
-    - POSTGRES_DB=database
-    - POSTGRES_USER=user
-    - POSTGRES_PASSWORD=password
-    - REDIS_URL=$REDIS_URL
-    - BROKER_URL=amqp://guest:guest@localhost:5672//
-    - CELERY_RESULT_BACKEND=redis://redis:6379
-  volumes:
-    - /app/.:/app
-  depends_on:
-    - db
-    - redis
-services:
-  db:
-    image: postgres:14.2
-    environment:
-      - POSTGRES_DB=database
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-    volumes:
-      - db-data:/var/lib/postgresql/data
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
-volumes:
-  db-data:
 
+run:
+  web:
+    image: registry.heroku.com/bhealth-backend/web
+    ports:
+      - $PORT:$PORT
+    depends_on:
+      - db
+    environment:
+      PYTHONUNBUFFERED: 1
+      DJANGO_SETTINGS_MODULE: src.config.local
+    volumes:
+      - staticfiles:/app/staticfiles
+      - mediafiles:/app/mediafiles
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: database
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+  staticfiles:
+  mediafiles:
