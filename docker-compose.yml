@@ -10,6 +10,10 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - db-data:/data/postgres
+    networks:
+      default:
+        external:
+          name: bhealth-network
 
   web:
     build:
@@ -25,6 +29,10 @@ services:
       - ./:/app
     depends_on:
       - db
+    networks:
+      default:
+        external:
+          name: bhealth-network
 
   queue:
     image: bhealth-mvp-backend_web:latest
@@ -33,6 +41,10 @@ services:
     command: sh /entrypoint-queue.sh && sh -c "python3 bhealthapp/rabbitmq.py && python3 bhealthapp/consumers.py"
     volumes:
         - ./:/app
+    networks:
+      default:
+        external:
+          name: bhealth-network
 
   beat:
     image: bhealth-mvp-backend_web:latest
@@ -45,12 +57,20 @@ services:
           - web
           - db
           - redis
+    networks:
+      default:
+        external:
+          name: bhealth-network
 
   redis:
     image: redis:alpine
     restart: always
     ports:
       - "6379:6379"
+    networks:
+      default:
+        external:
+          name: bhealth-network
 
   flower:
     image: bhealth-mvp-backend_web:latest
@@ -63,6 +83,10 @@ services:
     depends_on:
       - queue
       - redis
+    networks:
+      default:
+        external:
+          name: bhealth-network
 
 volumes:
   db-data:
