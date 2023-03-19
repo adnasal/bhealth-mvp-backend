@@ -53,6 +53,7 @@ django-timezone-field==4.2.3
 django-unique-upload==0.2.1
 djangorestframework==3.12.4
 djangorestframework-simplejwt==4.7.1
+dj-database-url==1.2.0
 docker==5.0.3
 docker-compose==1.29.2
 dockerpty==0.4.1

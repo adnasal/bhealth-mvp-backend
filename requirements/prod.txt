@@ -172,3 +172,4 @@ xdg==5.0.0
 zipp==1.0.0
 zope.event==4.6
 zope.interface==5.5.2
+dj-database-url==1.2.0
