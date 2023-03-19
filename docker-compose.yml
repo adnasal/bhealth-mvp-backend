@@ -11,9 +11,7 @@ services:
     volumes:
       - db-data:/data/postgres
     networks:
-      default:
-        external:
-          name: bhealth-network
+      - bhealth-network
 
   web:
     build:
@@ -30,9 +28,7 @@ services:
     depends_on:
       - db
     networks:
-      default:
-        external:
-          name: bhealth-network
+      - bhealth-network
 
   queue:
     image: bhealth-mvp-backend_web:latest
@@ -42,9 +38,7 @@ services:
     volumes:
         - ./:/app
     networks:
-      default:
-        external:
-          name: bhealth-network
+      - bhealth-network
 
   beat:
     image: bhealth-mvp-backend_web:latest
@@ -52,15 +46,13 @@ services:
     env_file: .env
     command: sh /entrypoint-beat.sh
     volumes:
-          - ./:/app
+      - ./:/app
     depends_on:
-          - web
-          - db
-          - redis
+      - web
+      - db
+      - redis
     networks:
-      default:
-        external:
-          name: bhealth-network
+      - bhealth-network
 
   redis:
     image: redis:alpine
@@ -68,9 +60,7 @@ services:
     ports:
       - "6379:6379"
     networks:
-      default:
-        external:
-          name: bhealth-network
+      - bhealth-network
 
   flower:
     image: bhealth-mvp-backend_web:latest
@@ -84,9 +74,12 @@ services:
       - queue
       - redis
     networks:
-      default:
-        external:
-          name: bhealth-network
+      - bhealth-network
 
 volumes:
   db-data:
+
+networks:
+  bhealth-network:
+    external: false
+
