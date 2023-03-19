@@ -371,3 +371,13 @@ RABBITMQ_USER = os.environ.get('RABBITMQ_USER', 'guest')
 RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD', 'guest')
 RABBITMQ_VHOST = os.environ.get('RABBITMQ_VHOST', '/')
 RABBITMQ_EXCHANGE = os.environ.get('RABBITMQ_EXCHANGE', 'my_exchange')
+
+import dj_database_url
+
+# Database
+# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
+
+DATABASES = {
+    'default': dj_database_url.parse(os.environ.get('DATABASE_URL')),
+    'extra_db': dj_database_url.parse(os.environ.get('SECOND_DATABASE_URL'))
+}
