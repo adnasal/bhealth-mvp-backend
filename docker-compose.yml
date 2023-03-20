@@ -1,4 +1,5 @@
 version: '3'
+
 services:
   db:
     image: postgres:14.2
@@ -30,13 +31,29 @@ services:
     networks:
       - bhealth-network
 
+  rabbitmq:
+    image: rabbitmq:3
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_PLUGINS: rabbitmq_management
+    networks:
+      - bhealth-network
+
+
+
   queue:
     image: bhealth-mvp-backend_web:latest
     restart: always
     env_file: .env
-    command: sh /entrypoint-queue.sh && sh -c "python3 bhealthapp/rabbitmq.py && python3 bhealthapp/consumers.py"
+    command: sh /entrypoint-queue.sh && sh -c "python3 bhealthapp/consumers.py"
     volumes:
         - ./:/app
+    depends_on:
+      - rabbitmq
     networks:
       - bhealth-network
 
@@ -82,4 +99,3 @@ volumes:
 networks:
   bhealth-network:
     external: false
-

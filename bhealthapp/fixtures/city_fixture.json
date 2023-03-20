@@ -1,5 +1,5 @@
 [{
-  "model": "models.City",
+  "model": "bhealthapp.City",
   "fields": {
     "id": "1",
     "name": "Sarajevo",
@@ -8,7 +8,7 @@
   }
 },
   {
-  "model": "models.Country",
+  "model": "bhealthapp.Country",
   "fields": {
     "id": "1",
     "name": "Bosnia and Herzegovina"
