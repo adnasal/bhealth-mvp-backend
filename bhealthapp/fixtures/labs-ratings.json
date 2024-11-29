@@ -1,0 +1,811 @@
+[{
+    "model": "bhealthapp.service",
+    "pk": 167,
+    "fields": {
+        "name": "OCTINOXATE, TITANIUM DIOXIDE",
+        "duration": "00:00:30",
+        "type": 7
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 178,
+    "fields": {
+        "name": "potassium chloride",
+        "duration": "00:00:30",
+        "type": 3
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 182,
+    "fields": {
+        "name": "Verapamil Hydrochloride",
+        "duration": "00:00:30",
+        "type": 6
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 183,
+    "fields": {
+        "name": "Baptisia, Bryonia, Borax, Candida A, Calendula, Hydrastis, Kali Chloricum, Mercurius Sol, Nat Mur, Nux Moschata, Nux Vomica, Phosphorus, Saccharum Album, Sulphuricum Acidum, Staphysagria,",
+        "duration": "00:00:30",
+        "type": 5
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 192,
+    "fields": {
+        "name": "Propafenone Hydrochloride",
+        "duration": "00:00:30",
+        "type": 9
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 194,
+    "fields": {
+        "name": "DIMETHICONE, ZINC OXIDE, OCTINOXATE",
+        "duration": "00:00:30",
+        "type": 3
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 201,
+    "fields": {
+        "name": "Arsenicum album, Hepar sulphuris calcareum, Hydrastis canadensis, Kali bichromicum, Lycopodium clavatum, Mercurius solubilis, Natrum muriaticum",
+        "duration": "00:00:30",
+        "type": 3
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 215,
+    "fields": {
+        "name": "Detoxifying",
+        "duration": "00:00:30",
+        "type": 11
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 216,
+    "fields": {
+        "name": "Meclizine HCl",
+        "duration": "00:00:30",
+        "type": 7
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 218,
+    "fields": {
+        "name": "dextromethorphan polistirex",
+        "duration": "00:00:30",
+        "type": 5
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 233,
+    "fields": {
+        "name": "Meloxicam",
+        "duration": "00:00:30",
+        "type": 5
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 247,
+    "fields": {
+        "name": "Haloperidol",
+        "duration": "00:00:30",
+        "type": 10
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 257,
+    "fields": {
+        "name": "phentermine hydrochloride",
+        "duration": "00:00:30",
+        "type": 3
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 261,
+    "fields": {
+        "name": "perphenazine and amitriptyline hydrochloride",
+        "duration": "00:00:30",
+        "type": 5
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 264,
+    "fields": {
+        "name": "Colloidal Oatmeal",
+        "duration": "00:00:30",
+        "type": 10
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 265,
+    "fields": {
+        "name": "Titanium Dioxide",
+        "duration": "00:00:30",
+        "type": 11
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 275,
+    "fields": {
+        "name": "MAGNESIUM PHOSPHATE, DIBASIC TRIHYDRATE",
+        "duration": "00:00:30",
+        "type": 9
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 277,
+    "fields": {
+        "name": "Cetirizine HCl",
+        "duration": "00:00:30",
+        "type": 12
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 288,
+    "fields": {
+        "name": "Metoprolol Tartrate",
+        "duration": "00:00:30",
+        "type": 11
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 295,
+    "fields": {
+        "name": "Candida albicans Skin Test Antigen",
+        "duration": "00:00:30",
+        "type": 3
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 296,
+    "fields": {
+        "name": "Blattella germanica",
+        "duration": "00:00:30",
+        "type": 11
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 297,
+    "fields": {
+        "name": "Hydrochlorothiazide",
+        "duration": "00:00:30",
+        "type": 12
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 322,
+    "fields": {
+        "name": "acyclovir",
+        "duration": "00:00:30",
+        "type": 11
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 323,
+    "fields": {
+        "name": "furosemide",
+        "duration": "00:00:30",
+        "type": 6
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 330,
+    "fields": {
+        "name": "ARNICA MONTANA ROOT, TOXICODENDRON PUBESCENS LEAF, SOLANUM DULCAMARA TOP, COMFREY ROOT, SULFUR, SANGUINARIA CANADENSIS ROOT, SUS SCROFA CARTILAGE, SUS SCROFA EMBRYO, SUS SCROFA UMBILICAL CORD, SUS SCROFA PLACENTA, .ALPHA.-LIPOIC ACID, COENZYME A, NADIDE and SODIUM DIETHYL OXALACETATE",
+        "duration": "00:00:30",
+        "type": 4
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 335,
+    "fields": {
+        "name": "Molds - Trichophyton Mix",
+        "duration": "00:00:30",
+        "type": 11
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 346,
+    "fields": {
+        "name": "Fluoride Ions",
+        "duration": "00:00:30",
+        "type": 10
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 357,
+    "fields": {
+        "name": "Hydroxyzine Hydrochloride",
+        "duration": "00:00:30",
+        "type": 3
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 358,
+    "fields": {
+        "name": "Zafirlukast",
+        "duration": "00:00:30",
+        "type": 7
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 362,
+    "fields": {
+        "name": "Sodium Chloride",
+        "duration": "00:00:30",
+        "type": 4
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 367,
+    "fields": {
+        "name": "Bufo rana, Apis mel., Asterias rubens, Belladonna, Bryonia, Calc. carb., Chamomilla, Chimaphila umbellata, Cinchona, Conium, Croton, Echinacea, Graphites, Helonias dioica, Lachesis, Merc. viv., Phellandrium aquaticum Phosphorus, Phytolacca, Pulsatilla, Sanguinaria, Silicea, Hamamelis, Ruta, Taraxacum",
+        "duration": "00:00:30",
+        "type": 3
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 395,
+    "fields": {
+        "name": "Naproxen Sodium",
+        "duration": "00:00:30",
+        "type": 12
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 402,
+    "fields": {
+        "name": "Ciprofloxacin",
+        "duration": "00:00:30",
+        "type": 7
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 421,
+    "fields": {
+        "name": "Tolnaftate 1%",
+        "duration": "00:00:30",
+        "type": 2
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 448,
+    "fields": {
+        "name": "Acetaminophen",
+        "duration": "00:00:30",
+        "type": 3
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 449,
+    "fields": {
+        "name": "Olive Olea europaea",
+        "duration": "00:00:30",
+        "type": 4
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 477,
+    "fields": {
+        "name": "Potassium Chloride, Dextrose Monohydrate and Sodium Chloride",
+        "duration": "00:00:30",
+        "type": 7
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 494,
+    "fields": {
+        "name": "Cefdinir",
+        "duration": "00:00:30",
+        "type": 9
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 495,
+    "fields": {
+        "name": "Losartan Potassium and Hydrochlorothiazide",
+        "duration": "00:00:30",
+        "type": 6
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 505,
+    "fields": {
+        "name": "Hydralazine Hydrochloride",
+        "duration": "00:00:30",
+        "type": 11
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 509,
+    "fields": {
+        "name": "TRICLOSAN",
+        "duration": "00:00:30",
+        "type": 13
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 512,
+    "fields": {
+        "name": "Hydrocodone Bitartrate And Acetaminophen",
+        "duration": "00:00:30",
+        "type": 7
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 524,
+    "fields": {
+        "name": "Titanium Dioxide",
+        "duration": "00:00:30",
+        "type": 1
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 525,
+    "fields": {
+        "name": "Insomnia 2",
+        "duration": "00:00:30",
+        "type": 12
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 528,
+    "fields": {
+        "name": "Acetaminophen, Dextromethorphan Hydrobromide, Doxylamine Succinate",
+        "duration": "00:00:30",
+        "type": 13
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 529,
+    "fields": {
+        "name": "ADENOSINE",
+        "duration": "00:00:30",
+        "type": 4
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 530,
+    "fields": {
+        "name": "Probenecid",
+        "duration": "00:00:30",
+        "type": 6
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 532,
+    "fields": {
+        "name": "NITROUS OXIDE",
+        "duration": "00:00:30",
+        "type": 4
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 533,
+    "fields": {
+        "name": "Air",
+        "duration": "00:00:30",
+        "type": 11
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 544,
+    "fields": {
+        "name": "Aconitum nap., Ambra, Anacardium orientale, Arg.nit., Asafoetida, Bryonia, Chamomilla, Cimicifuga, Coffea cruda, Cypripedium, Gelsemium, Hyoscyamus, Hypericum, Ignatia, Kali phos., Nux vom., Sambucus nig., Strychninum, Theridion, Valeriana, Passiflora",
+        "duration": "00:00:30",
+        "type": 10
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 554,
+    "fields": {
+        "name": "Secale Nicotiana",
+        "duration": "00:00:30",
+        "type": 12
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 572,
+    "fields": {
+        "name": "METRONIDAZOLE",
+        "duration": "00:00:30",
+        "type": 9
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 608,
+    "fields": {
+        "name": "ciprofloxacin hydrochloride",
+        "duration": "00:00:30",
+        "type": 6
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 632,
+    "fields": {
+        "name": "Diltiazem Hydrochloride",
+        "duration": "00:00:30",
+        "type": 12
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 642,
+    "fields": {
+        "name": "SODIUM FLUORIDE",
+        "duration": "00:00:30",
+        "type": 4
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 646,
+    "fields": {
+        "name": "Glimepiride",
+        "duration": "00:00:30",
+        "type": 12
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 677,
+    "fields": {
+        "name": "Folic Acid",
+        "duration": "00:00:30",
+        "type": 5
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 689,
+    "fields": {
+        "name": "MORPHINE SULFATE",
+        "duration": "00:00:30",
+        "type": 10
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 691,
+    "fields": {
+        "name": "Finasteride",
+        "duration": "00:00:30",
+        "type": 3
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 703,
+    "fields": {
+        "name": "Betamethasone Dipropionate",
+        "duration": "00:00:30",
+        "type": 3
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 722,
+    "fields": {
+        "name": "Condurango, Echinacea (Angustifolia), Ginkgo biloba, Hydrastis canadensis, Myrrha, OSHA, Phytolacca decandra, Tabebuia impetiginosa, Propolis,",
+        "duration": "00:00:30",
+        "type": 1
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 740,
+    "fields": {
+        "name": "morphine sulfate",
+        "duration": "00:00:30",
+        "type": 9
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 749,
+    "fields": {
+        "name": "Undecylenic acid",
+        "duration": "00:00:30",
+        "type": 11
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 750,
+    "fields": {
+        "name": "ziprasidone hydrochloride",
+        "duration": "00:00:30",
+        "type": 13
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 758,
+    "fields": {
+        "name": "Egg White",
+        "duration": "00:00:30",
+        "type": 3
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 759,
+    "fields": {
+        "name": "Sulfasalazine",
+        "duration": "00:00:30",
+        "type": 11
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 761,
+    "fields": {
+        "name": "Avobenzone, Homosalate, Octisalate, Octocrylene, and Oxybenzone",
+        "duration": "00:00:30",
+        "type": 6
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 808,
+    "fields": {
+        "name": "Horse Hair",
+        "duration": "00:00:30",
+        "type": 13
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 839,
+    "fields": {
+        "name": "Ranitidine",
+        "duration": "00:00:30",
+        "type": 4
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 857,
+    "fields": {
+        "name": "Bismuth Subsalicylate",
+        "duration": "00:00:30",
+        "type": 12
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 863,
+    "fields": {
+        "name": "Quetiapine Fumarate",
+        "duration": "00:00:30",
+        "type": 5
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 889,
+    "fields": {
+        "name": "Dextromethorphan HBr, Guaifenesin and Pseudoephedrine HCl",
+        "duration": "00:00:30",
+        "type": 9
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 914,
+    "fields": {
+        "name": "triamcinolone acetonide",
+        "duration": "00:00:30",
+        "type": 12
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 920,
+    "fields": {
+        "name": "Witch Hazel",
+        "duration": "00:00:30",
+        "type": 1
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 921,
+    "fields": {
+        "name": "Hydrogen Peroxide",
+        "duration": "00:00:30",
+        "type": 9
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 939,
+    "fields": {
+        "name": "Nafcillin",
+        "duration": "00:00:30",
+        "type": 1
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 944,
+    "fields": {
+        "name": "Avobenzone, Octocrylene and Oxybenzone",
+        "duration": "00:00:30",
+        "type": 9
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 947,
+    "fields": {
+        "name": "Irbesartan and Hydrochlorothiazide",
+        "duration": "00:00:30",
+        "type": 13
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 959,
+    "fields": {
+        "name": "EUCALYPTOL, MENTHOL, METHYL SALICYLATE, THYMOL",
+        "duration": "00:00:30",
+        "type": 7
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 969,
+    "fields": {
+        "name": "triclosan",
+        "duration": "00:00:30",
+        "type": 4
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 970,
+    "fields": {
+        "name": "Oxymorphone Hydrochloride",
+        "duration": "00:00:30",
+        "type": 7
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 974,
+    "fields": {
+        "name": "Pussy Willow",
+        "duration": "00:00:30",
+        "type": 6
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 980,
+    "fields": {
+        "name": "CAPSAICIN",
+        "duration": "00:00:30",
+        "type": 11
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 983,
+    "fields": {
+        "name": "Ethylhexyl Methoxycinnamate, Zinc Oxide",
+        "duration": "00:00:30",
+        "type": 10
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 986,
+    "fields": {
+        "name": "doxazosin mesylate",
+        "duration": "00:00:30",
+        "type": 2
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 991,
+    "fields": {
+        "name": "Aluminum Chlorohydrate",
+        "duration": "00:00:30",
+        "type": 3
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 995,
+    "fields": {
+        "name": "minocycline hydrochloride",
+        "duration": "00:00:30",
+        "type": 4
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 996,
+    "fields": {
+        "name": "Miconazole Nitrate",
+        "duration": "00:00:30",
+        "type": 11
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 2118,
+    "fields": {
+        "name": "Hydrocortisone",
+        "duration": "00:00:30",
+        "type": 4
+    }
+},
+{
+    "model": "bhealthapp.service",
+    "pk": 7039,
+    "fields": {
+        "name": "Vitamin A, Ascorbic Acid, Vitamin D, .Alpha.-Tocopherol, Thiamine Mononitrate, Riboflavin, Niacin, Pyridoxine Hydrochloride, Folic Acid, Cyanocobalamin, Calcium, Iron, Magnesium, Zinc, and Copper",
+        "duration": "00:00:30",
+        "type": 6
+    }
+}
+]
