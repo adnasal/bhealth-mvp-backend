@@ -35,6 +35,7 @@ INSTALLED_APPS = (
     # Third party apps
     'rest_framework',  # utilities for rest apis
     'rest_framework.authtoken',  # token authentication
+    'rest_framework_simplejwt',
     'django_filters',  # for filtering rest endpoints
     'django_rest_passwordreset',  # for reset password endpoints
     'drf_yasg',  # swagger api

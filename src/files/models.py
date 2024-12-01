@@ -2,7 +2,6 @@ from django.db import models
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from easy_thumbnails.exceptions import EasyThumbnailsError
-from easy_thumbnails.files import get_thumbnailer
 from PIL import UnidentifiedImageError
 
 
@@ -30,10 +29,4 @@ def generate_thumbnail(sender, instance=None, created=False, **kwargs):
     if created is False:
         return
 
-    thumbnailer = get_thumbnailer(instance.file.name, relative_name='thumbnail')
-    try:
-        thumbnail = thumbnailer.get_thumbnail({'size': File.THUMBNAIL_SIZE}, save=False)
-    except (UnidentifiedImageError, EasyThumbnailsError):
-        return
-    else:
-        instance.thumbnail.save(name=f'small_{instance.file.name}', content=thumbnail)
+

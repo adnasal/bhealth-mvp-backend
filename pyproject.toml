@@ -2,3 +2,42 @@
 line-length = 130
 target-version = ['py38']
 skip-string-normalization = true
+
+[tool.poetry]
+name = "poetry install"
+version = "1.8.4"
+description = "new"
+authors = []
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.9.6"
+django-rest-passwordreset = "^1.5.0"
+django-inlinecss = "^0.3.0"
+python-dotenv = "^1.0.1"
+sentry-sdk = "^2.19.0"
+dj-database-url = "^2.3.0"
+django-rest-framework = "^0.1.0"
+django-filter = "^24.3"
+drf-yasg = "^1.21.8"
+easy-thumbnails = "^2.10"
+social-auth-app-django = "^5.4.2"
+django-cors-headers = "^4.6.0"
+django-summernote = "^0.8.20.0"
+django-celery-beat = "^2.7.0"
+django-money = "^3.5.3"
+health-check = "^3.4.1"
+django-health-check = "^3.18.3"
+django-nose = "^1.4.7"
+psycopg2 = "^2.9.10"
+rest-framework-simplejwt = "^0.0.2"
+djangorestframework-simplejwt = "^5.3.1"
+urllib3 = "^2.2.3"
+
+
+[tool.poetry.group.dev.dependencies]
+django-inlinecss = "^0.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
