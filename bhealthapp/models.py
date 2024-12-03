@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.dispatch import receiver
 from django.urls import reverse
-#from django_rest_passwordreset.signals import reset_password_token_created
+from django_rest_passwordreset.signals import reset_password_token_created
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -12,17 +12,17 @@ from src.common.helpers import build_absolute_uri
 from src.notifications.services import notify, ACTIVITY_USER_RESETS_PASS
 
 
-#@receiver(reset_password_token_created)
-#def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
+@receiver(reset_password_token_created)
+def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
 
- #   reset_password_path = reverse('password_reset:reset-password-confirm')
-  #  context = {
-   #     'username': reset_password_token.user.username,
-    #    'email': reset_password_token.user.email,
-     #   'reset_password_url': build_absolute_uri(f'{reset_password_path}?token={reset_password_token.key}'),
-    #}
+    reset_password_path = reverse('password_reset:reset-password-confirm')
+    context = {
+        'username': reset_password_token.user.username,
+        'email': reset_password_token.user.email,
+        'reset_password_url': build_absolute_uri(f'{reset_password_path}?token={reset_password_token.key}'),
+    }
 
-    #notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])
+    notify(ACTIVITY_USER_RESETS_PASS, context=context, email_to=[reset_password_token.user.email])
 
 
 class GetOrNoneManager(models.Manager):
@@ -32,15 +32,36 @@ class GetOrNoneManager(models.Manager):
         except self.model.DoesNotExist:
             return None
 
-
 class Country(models.Model):
-    name = models.TextField(default='Bosnia and Herzegovina', max_length=255, null=False)
+    country_id = models.BigAutoField(primary_key=True)
+    country_name = models.TextField(default='Bosnia and Herzegovina', max_length=255, null=False)
+    country_code = models.TextField(default='BA', max_length=2, unique=True, null=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Country"
+        verbose_name_plural = "Countries"
+        ordering = ['name']
 
 
 class City(models.Model):
-    name = models.TextField(default='Sarajevo', max_length=255, null=False)
-    country = models.ForeignKey(Country, related_name='city_country', on_delete=models.DO_NOTHING)
-    postal_code = models.IntegerField()
+    city_id = models.BigAutoField(primary_key=True)
+    city_name = models.TextField(default='Sarajevo', max_length=255, null=False)
+    country_id = models.ForeignKey(Country, related_name='cities', on_delete=models.DO_NOTHING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name}, {self.country.name}"
+
+    class Meta:
+        verbose_name = "City"
+        verbose_name_plural = "Cities"
+        ordering = ['name']
 
 
 class User(AbstractUser):
@@ -50,20 +71,36 @@ class User(AbstractUser):
         (GENDER_MALE, 'Male'),
         (GENDER_FEMALE, 'Female'),
     )
-    username = models.CharField(null=True, blank=True, max_length=150)
-    profile_picture = models.ImageField(default='default.jpg', upload_to='profile_pics', null=True)
-    profile_link = models.CharField(max_length=255, blank=True, null=True, default=None)
-    password = models.CharField(max_length=255)
+    USER_STATUS_ACTIVE = 'active'
+    USER_STATUS_INACTIVE = 'inactive'
+    USER_STATUS_CHOICES = (
+        (USER_STATUS_ACTIVE, 'Active'),
+        (USER_STATUS_INACTIVE, 'Inactive'),
+    )
+    user_id = models.BigAutoField(primary_key=True)
+    username = models.TextField(max_length=150, null=True, blank=True)
+    password = models.TextField(max_length=255)
     phone_number = models.CharField(null=True, blank=True, max_length=255)
     email = models.TextField(null=False, max_length=255)
     dob = models.DateField(null=True)
-    address = models.TextField(max_length=80, null=True, default=None)
-    city = models.ForeignKey(City, related_name='user_city', on_delete=models.DO_NOTHING, default=1)
-    is_blocked = models.BooleanField(default=False)
-    is_email_verified = models.BooleanField(default=False)
+    party = models.ForeignKey(
+        'Party',
+        related_name='user_party',
+        on_delete=models.DO_NOTHING,
+        default=1  # TBD
+    )
+    #city = models.ForeignKey(City, related_name='user_city', on_delete=models.DO_NOTHING, default=1)
+    #is_blocked = models.BooleanField(default=False)
+    email_verified = models.BooleanField(default=False)
+    number_verified = models.BooleanField(default=False)
     gender = models.PositiveSmallIntegerField(
         choices=GENDER_CHOICES,
         default=GENDER_FEMALE,
+    )
+    user_status = models.CharField(
+        max_length=20,
+        choices=USER_STATUS_CHOICES,
+        default=USER_STATUS_ACTIVE,
     )
 
     def get_tokens(self):
@@ -78,20 +115,63 @@ class User(AbstractUser):
         return self.username
 
 
-class Lab(models.Model):
-    city = models.ForeignKey(City, related_name='lab_city', on_delete=models.DO_NOTHING, default='1')
-    name = models.TextField(null=False, max_length=255, default=None)
+class Institution(models.Model):
+    INSTITUTION_STATUS_ACTIVE = 'active'
+    INSTITUTION_STATUS_INACTIVE = 'inactive'
+    INSTITUTION_STATUS_CHOICES = (
+        (INSTITUTION_STATUS_ACTIVE, 'Active'),
+        (INSTITUTION_STATUS_INACTIVE, 'Inactive'),
+    )
+    institution_id = models.BigAutoField(primary_key=True)
+    city_id = models.ForeignKey(City, related_name='institution_city', on_delete=models.DO_NOTHING, default='1')
+    institution_name = models.TextField(null=False, max_length=255, default=None)
     password = models.CharField(max_length=100)
     address = models.TextField(null=False, max_length=350, default=None)
-    phone_number = models.CharField(null=True, max_length=255)
-    email = models.TextField(null=False, max_length=255)
+    latitude = models.DecimalField(null=False, max_digits=7, decimal_places=2, default=None)
+    longitude = models.DecimalField(null=False, max_digits=7, decimal_places=2, default=None)
+    phone_numbers = models.TextField(null=False, blank=False)
+    emails = models.TextField(null=False, max_length=255)
     description = models.TextField(null=False, default='Default description')
-    website = models.CharField(max_length=255, blank=True, null=True, default='mywebsite.com')
-    working_days = models.TextField(null=True, max_length=255, default='All working days')
-    profile_picture = models.ImageField(default='default.jpg', upload_to='profile_pics', null=True)
-    average_rating = models.FloatField(default=0.0)
+    website = models.TextField(max_length=255, blank=True, null=True, default='bhealth.ba')
+    #subsidiary_id = models.ForeignKey(Country, related_name='cities', on_delete=models.DO_NOTHING)
+    #working_days = models.TextField(null=True, max_length=255, default='All working days')
+    #profile_picture = models.ImageField(default='default.jpg', upload_to='profile_pics', null=True)
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
+    founded = models.DateField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_office = models.BooleanField(default=False)
+
+    institution_status = models.CharField(
+        max_length=20,
+        choices=INSTITUTION_STATUS_CHOICES,
+        default=INSTITUTION_STATUS_ACTIVE,
+    )
+
+    def get_phone_numbers(self):
+        if self.phone_numbers:
+            return self.phone_numbers.split(',')
+        return []
+
+    def set_phone_numbers(self, phone_list):
+        self.phone_numbers = ','.join(phone_list)
+        self.save()
+
+    def get_emails(self):
+        if self.emails:
+            return self.emails.split(',')
+        return []
+
+    def set_emails(self, emails):
+        self.emails = ','.join(emails)
+        self.save()
+
+    def __str__(self):
+        return self.institution_name
 
 
+
+'''
 class UserRating(models.Model):
     user = models.ForeignKey(User, related_name='user_rating', on_delete=models.DO_NOTHING)
     lab = models.ForeignKey(Lab, related_name='lab_rating', on_delete=models.DO_NOTHING)
@@ -121,26 +201,40 @@ class UserRating(models.Model):
 class Type(models.Model):
     name = models.TextField(null=False, max_length=255, default=None)
     description = models.TextField(null=False, max_length=1000, default='Type Description')
+'''
 
 
 class Service(models.Model):
-    name = models.TextField(null=False, max_length=255, default=None)
-    duration = models.DurationField(default=30)
-    type = models.ForeignKey(Type, related_name='service_type', on_delete=models.DO_NOTHING)
+    service_id = models.BigAutoField(primary_key=True)
+    service_name = models.TextField(null=False, max_length=255, default=None)
+    service_category = models.TextField(null=False, max_length=255, default=None)
+    description = models.TextField(null=False, default='Default description')
+    is_special_offer = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
-class LabService(models.Model):
-    lab_service = models.ForeignKey(Lab, related_name='lab_name_service', on_delete=models.DO_NOTHING)
-    service = models.ForeignKey(Service, related_name='service_name', on_delete=models.DO_NOTHING)
+class InstitutionService(models.Model):
+    institution_service_id = models.BigAutoField(primary_key=True)
+    service_id = models.ForeignKey(Service, related_name='service_name', on_delete=models.DO_NOTHING)
+    institution_id = models.ForeignKey(Institution, related_name='institution_name', on_delete=models.DO_NOTHING)
+    description = models.TextField(null=False, default='Default description')
+    price = models.DecimalField(null=False, max_digits=7, decimal_places=2, default=None)
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class Appointment(models.Model):
-    lab_appointment = models.ForeignKey(Lab, related_name='lab_name_appointment', on_delete=models.DO_NOTHING)
-    service_appointment = models.ForeignKey(Service, related_name='service_appointment', on_delete=models.DO_NOTHING)
-    patient = models.ForeignKey(User, related_name='patient', on_delete=models.DO_NOTHING)
-    date = models.DateTimeField(null=True, blank=True)
-    fee = models.FloatField(default=0.0)
-    doctor = models.CharField(max_length=255, default='My Doctor')
+    appointment_id = models.BigAutoField(primary_key=True)
+    institution_service_id = models.ForeignKey(InstitutionService, related_name='institution_service_name', on_delete=models.DO_NOTHING)
+    patient_id = models.ForeignKey(User, related_name='patient', on_delete=models.DO_NOTHING)
+    doctor_id = models.ForeignKey(Doctor, related_name='doctor', on_delete=models.DO_NOTHING)
+    datetime = models.DateTimeField(null=True, blank=True)
+    description = models.TextField(null=False, default='Default description')
+    is_completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     STATUS_PENDING = 0
     STATUS_CONFIRMED = 1
@@ -152,21 +246,167 @@ class Appointment(models.Model):
         (STATUS_CANCELED, 'Canceled Appointment'),
     )
 
-    status = models.PositiveSmallIntegerField(
+    appointment_status = models.PositiveSmallIntegerField(
         choices=STATUS_CHOICES,
         default=STATUS_PENDING,
     )
 
 
-class Result(models.Model):
-    appointment = models.ForeignKey(Appointment, related_name='appointment_result', on_delete=models.DO_NOTHING)
-    pdf = models.FileField(upload_to='pdf', default='src/results/Patient Medical History Report.pdf')
+class MedicalRecord(models.Model):
+    medical_record_id = models.BigAutoField(primary_key=True)
+    appointment_id = models.ForeignKey(Appointment, related_name='appointment_result', on_delete=models.DO_NOTHING)
+    user_id = models.ForeignKey(User, related_name='patient', on_delete=models.DO_NOTHING)
+    file = models.TextField(default='File')
+    message_content = models.TextField(default='Message')
+    downloads = models.IntegerField(default=0)
+    reference_values = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    #pdf = models.FileField(upload_to='pdf', default='src/results/Patient Medical History Report.pdf')
 
 
 class Notification(models.Model):
-    notification_appointment = models.ForeignKey(Appointment, related_name='notification_appointment', on_delete=models.DO_NOTHING)
-    message = models.TextField(default='Notification!')
-    is_confirmed = models.BooleanField(default=False)
-    notification_date = models.DateTimeField(default=datetime.now())
+    #TBD name
+    notification_id = models.BigAutoField(primary_key=True)
+    user_id = models.ForeignKey(User, related_name='notification_user', on_delete=models.DO_NOTHING)
+    event_name = models.TextField(default='Event')
+    payload_data= models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    #is_confirmed = models.BooleanField(default=False)
+
+class Party(models.Model):
+    GENDER_MALE = 0
+    GENDER_FEMALE = 1
+    GENDER_CHOICES = (
+        (GENDER_MALE, 'Male'),
+        (GENDER_FEMALE, 'Female'),
+    )
+    party_id = models.BigAutoField(primary_key=True)
+    first_name = models.TextField(null=False, max_length=255, default=None)
+    last_name = models.TextField(null=False, max_length=255, default=None)
+    salutation = models.TextField(max_length=255, default=None)
+    phone_code = models.TextField(max_length=255, default=None)
+    phone_number = models.TextField(max_length=255, default=None)
+    city_id = models.ForeignKey(City, related_name='party_city', on_delete=models.DO_NOTHING)
+    gender = models.PositiveSmallIntegerField(
+        choices=GENDER_CHOICES,
+        default=GENDER_FEMALE,
+    )
+    dob = models.DateField(null=True)
+    address = models.TextField(null=False, max_length=350, default=None)
+    ssn = models.TextField(max_length=255, default=None)
+    descended_at = models.DateTimeField(auto_now=True)
+    is_doctor = models.BooleanField(default=False)
+    description = models.TextField(null=False, default='Default description')
+    specializations = models.TextField(null=False, default=None)
+
+    def get_specializations(self):
+        if self.specializations:
+            return self.specializations.split(',')
+        return []
+
+    def set_specializations(self, specializations):
+        self.specializations = ','.join(specializations)
+        self.save()
+
+class NotificationHistory(models.Model):
+    notification_id = models.BigAutoField(primary_key=True)
+    event_name = models.TextField(null=False, default=None)
+    user_id = models.ForeignKey(User, related_name='notification_user', on_delete=models.DO_NOTHING)
+    payload_data = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
+class InstitutionWorkingHours(models.Model):
+    institution_working_hour_id = models.BigAutoField(primary_key=True)
+    institution_id = models.ForeignKey(Institution, related_name='institution_working_hours', on_delete=models.DO_NOTHING)
+    day_of_week = models.TextField(null=False, default=None)
+    open_time = models.TimeField(null=False, default=None)
+    close_time = models.TimeField(null=False, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class UserSetting(models.Model):
+    #user_setting_id = models.BigAutoField(primary_key=True)
+    user_id = models.ForeignKey(User, related_name='user_setting', on_delete=models.DO_NOTHING)
+    #notifications = models.JSONField(null=True, blank=True)
+    additional_data = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class Drug(models.Model):
+    drug_id = models.BigAutoField(primary_key=True)
+    drug_name = models.TextField(null=False, default=None)
+    drug_code = models.TextField(null=False, default=None)
+    vendor = models.TextField(null=False, default=None)
+    drug_type = models.DateTimeField(auto_now_add=True)
+    dosage = models.TextField(null=False, default=None)
+    description = models.TextField(null=False, default=None)
+    prescription_required = models.BooleanField(default=False)
+    side_effects = models.TextField(null=False, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class Diagnosis(models.Model):
+    diagnosis_id = models.BigAutoField(primary_key=True)
+    diagnosis_name = models.TextField(null=False, default=None)
+    description = models.TextField(null=False, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class PartyDiagnosis(models.Model):
+    party_diagnosis_id = models.BigAutoField(primary_key=True)
+    diagnosis_id = models.ForeignKey(Diagnosis, related_name='party_diagnosis', on_delete=models.DO_NOTHING)
+    party_id = models.ForeignKey(Party, related_name='party_diagnosis', on_delete=models.DO_NOTHING)
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(auto_now=True)
+    description = models.TextField(null=False, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class Treatment(models.Model):
+    treatment_id = models.BigAutoField(primary_key=True)
+    party_diagnosis_id = models.ForeignKey(PartyDiagnosis, related_name='treatment_party_diagnosis', on_delete=models.DO_NOTHING)
+    drug_id = models.ForeignKey(Drug, related_name='treatment_drug', on_delete=models.DO_NOTHING)
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(auto_now=True)
+    description = models.TextField(null=False, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class Role(models.Model):
+    role_id = models.BigAutoField(primary_key=True)
+    role_name = models.TextField(null=False, default=None)
+    description = models.TextField(null=False, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class ReferenceValue(models.Model):
+    reference_value_id = models.BigAutoField(primary_key=True)
+    institution_service_id = models.ForeignKey(InstitutionService, related_name='institution_service', on_delete=models.DO_NOTHING)
+    reference_value_name = models.BigIntegerField(null=False, default=None)
+    lower_limit = models.TextField(null=False, default=None)
+    upper_limit = models.TextField(null=False, default=None)
+    low_description = models.TextField(null=False, default=None)
+    high_description = models.TextField(null=False, default=None)
+    normal_description = models.TextField(null=False, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class InstitutionUser(models.Model):
+    institution_user_id = models.BigAutoField(primary_key=True)
+    user_id = models.ForeignKey(User, related_name='institution_user', on_delete=models.DO_NOTHING)
+    institution_id = models.ForeignKey(Institution, related_name='institution_user', on_delete=models.DO_NOTHING)
+    roles = models.TextField(null=False, default=None)
+
+    def get_roles(self):
+        if self.roles:
+            return self.roles.split(',')
+        return []
+
+    def set_roles(self, roles):
+        self.roles = ','.join(roles)
+        self.save()
