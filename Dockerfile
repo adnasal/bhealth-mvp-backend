@@ -36,23 +36,14 @@ RUN set -x && \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Install pyenv to manage Python versions
-RUN curl https://pyenv.run | bash
-
-# Add pyenv to the PATH
-ENV PATH="/root/.pyenv/bin:/root/.pyenv/shims:$PATH"
-
-# Install Python 3.9 using pyenv
-RUN pyenv install 3.9.6 && pyenv global 3.9.6
-
 # Install Poetry globally via the official install script
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
 # Copy application dependencies and configuration files
 COPY pyproject.toml poetry.lock /app/
 
-# Set Poetry to use Python 3.9 for the project
-RUN poetry env use python3.9
+# Set Poetry to use the correct Python version (Python 3.10, which is already the base)
+RUN poetry env use python3.10
 
 # Install dependencies using Poetry
 RUN poetry install --no-interaction

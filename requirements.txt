@@ -33,7 +33,7 @@ defusedxml==0.7.1
 distlib==0.3.6
 distro==1.7.0
 dj-database-url==1.2.0
-Django
+django
 django-3-jet==1.0.8
 django-activity-stream==0.10.0
 django-auto-prefetching==0.1.10

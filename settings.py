@@ -110,10 +110,10 @@ CELERY_IMPORTS = [
 
 import dj_database_url
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default='postgres://sbuomfsrgenfin:60e32ec9f2e0b5d4d02ccb528f350f0c6d53c61a089a5d6ac62c5661e136ed35@ec2-52-50-161-219.eu-west-1.compute.amazonaws.com:5432/d4b173ddffcql4')
-}
+#DATABASES = {
+ #   'default': dj_database_url.config(
+  #      default='postgres://sbuomfsrgenfin:60e32ec9f2e0b5d4d02ccb528f350f0c6d53c61a089a5d6ac62c5661e136ed35@ec2-52-50-161-219.eu-west-1.compute.amazonaws.com:5432/d4b173ddffcql4')
+#}
 
 # Postgres
 DATABASES = {
