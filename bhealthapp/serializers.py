@@ -206,12 +206,12 @@ class AppointmentPatientSerializer(serializers.ModelSerializer):
             'profile_picture'
         ]
 
-
+'''
 
 class AppointmentSerializer(serializers.ModelSerializer):
     institution_appointment = serializers.StringRelatedField()
     service_appointment = serializers.SerializerMethodField()
-    patient = AppointmentPatientSerializer(read_only=True)
+   # patient = AppointmentPatientSerializer(read_only=True)
 
     class Meta:
         model = Appointment
@@ -227,7 +227,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
     def get_service_appointment(self, obj):
         return obj.service_appointment.name
-'''
+
 
 class AppointmentViewSerializer(serializers.ModelSerializer):
     institution_appointment = InstitutionViewSerializer()

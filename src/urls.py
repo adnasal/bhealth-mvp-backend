@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.conf.urls.static import static
+from django.urls.static import static
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.urls import reverse_lazy
@@ -12,12 +12,10 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from bhealthapp.views import UserCreate, LabView, LabListView, LabServiceListView, ResultListView, \
-    UpcomingAppointmentsLabView, UpcomingAppointmentsUserView, PastAppointmentsLabView, \
-    PastAppointmentsUserView, ProfileView, PatientsView, ResultView, RequestsView, LabAddView, \
-    LabRemoveView, UserLogin, LabCreate, RatingAddView, ResultAddView, UserUpdateView, LabUpdateView, \
+from bhealthapp.views import UserCreate, InstitutionView, UpcomingAppointmentsUserView, \
+    PastAppointmentsUserView, ProfileView, PatientsView, MedicalRecordView, RequestsView, UserLogin, InstitutionCreate, UserUpdateView, \
     AppointmentAddView, AppointmentView, NotificationListView, AppointmentUpdateView, NotificationConfirmView, \
-    AppointmentCancelView, DownloadResult, CanceledAppointmentsView, WeRecommendView
+    AppointmentCancelView, CanceledAppointmentsView, WeRecommendView
 
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
@@ -31,35 +29,35 @@ urlpatterns = [
 
     # API Endpoints
     path('api/v1/register_user', UserCreate.as_view(), name='account_create'),
-    path('api/v1/register_lab', LabCreate.as_view(), name='lab_account_create'),
-    path('api/v1/login', UserLogin.as_view(), name='login'),
-    path('api/v1/labs', LabListView.as_view(), name='labs'),
+    #path('api/v1/register_lab', LabCreate.as_view(), name='lab_account_create'),
+    #path('api/v1/login', UserLogin.as_view(), name='login'),
+    #path('api/v1/labs', LabListView.as_view(), name='labs'),
     path('api/v1/notifications', NotificationListView.as_view(), name='notifications'),
     path('api/v1/confirm_notification', NotificationConfirmView.as_view(), name='confirm_notification'),
-    path('api/v1/lab_services', LabServiceListView.as_view(), name='lab_services'),
-    path('api/v1/edit_profile_user', UserUpdateView.as_view(), name='edit_profile_user'),
-    path('api/v1/edit_profile_lab', LabUpdateView.as_view(), name='edit_profile_lab'),
+    #path('api/v1/lab_services', LabServiceListView.as_view(), name='lab_services'),
+    #path('api/v1/edit_profile_user', UserUpdateView.as_view(), name='edit_profile_user'),
+    #path('api/v1/edit_profile_lab', LabUpdateView.as_view(), name='edit_profile_lab'),
     path('api/v1/add_appointment', AppointmentAddView.as_view(), name='add_appointment'),
     path('api/v1/update_appointment', AppointmentUpdateView.as_view(), name='update_appointment'),
     path('api/v1/cancel_appointment', AppointmentCancelView.as_view(), name='cancel_appointment'),
-    path('api/v1/results', ResultListView.as_view(), name='results'),
-    path('api/v1/download_result', DownloadResult.as_view(), name='download_result'),
+   # path('api/v1/results', ResultListView.as_view(), name='results'),
+   # path('api/v1/download_result', DownloadResult.as_view(), name='download_result'),
     path('api/v1/appointment', AppointmentView.as_view(), name='get_appointment'),
     path('api/v1/canceled_appointments', CanceledAppointmentsView.as_view(), name='canceled_appointments'),
     path('api/v1/upcoming_appointments', UpcomingAppointmentsUserView.as_view(), name='user_upcoming_appointments'),
     path('api/v1/past_appointments', PastAppointmentsUserView.as_view(), name='user_past_appointments'),
-    path('api/v1/u_appointments', UpcomingAppointmentsLabView.as_view(), name='lab_upcoming_appointments'),
-    path('api/v1/p_appointments', PastAppointmentsLabView.as_view(), name='lab_past_appointments'),
+   # path('api/v1/u_appointments', UpcomingAppointmentsLabView.as_view(), name='lab_upcoming_appointments'),
+   # path('api/v1/p_appointments', PastAppointmentsLabView.as_view(), name='lab_past_appointments'),
     path('api/v1/requests', RequestsView.as_view(), name='requests'),
     path('api/v1/patients', PatientsView.as_view(), name='patients'),
-    path('api/v1/lab', LabView.as_view(), name='get_lab'),
-    path('api/v1/add_lab', LabAddView.as_view(), name='add_lab'),
-    path('api/v1/remove_lab', LabRemoveView.as_view(), name='remove_lab'),
+    #path('api/v1/lab', LabView.as_view(), name='get_lab'),
+   # path('api/v1/add_lab', LabAddView.as_view(), name='add_lab'),
+   # path('api/v1/remove_lab', LabRemoveView.as_view(), name='remove_lab'),
     path('api/v1/we_recommend', WeRecommendView.as_view(), name='top_labs'),
-    path('api/v1/result', ResultView.as_view(), name='get_result'),
+    #path('api/v1/result', ResultView.as_view(), name='get_result'),
     path('api/v1/profile', ProfileView.as_view(), name='get_profile'),
-    path('api/v1/add_rating', RatingAddView.as_view(), name='add_rating'),
-    path('api/v1/add_result', ResultAddView.as_view(), name='add_result'),
+   # path('api/v1/add_rating', RatingAddView.as_view(), name='add_rating'),
+   # path('api/v1/add_result', ResultAddView.as_view(), name='add_result'),
     path('api/v1/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
 
     # Auth

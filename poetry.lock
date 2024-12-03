@@ -651,17 +651,6 @@ django = ">=2.2"
 docs = ["sphinx"]
 test = ["boto3", "celery", "django-storages", "pytest", "pytest-cov", "pytest-django", "redis"]
 
-[[package]]
-name = "django-inlinecss"
-version = "0.3.0"
-description = "A Django app useful for inlining CSS (primarily for e-mails)"
-optional = false
-python-versions = "*"
-files = [
-    {file = "django-inlinecss-0.3.0.tar.gz", hash = "sha256:5a014278b017a07d9d0babe2bf1bc75a52e184fb0ed26e333e8ff0d8e777b9e2"},
-    {file = "django_inlinecss-0.3.0-py2.py3-none-any.whl", hash = "sha256:eddcb295a35fcddf4fce26f9c232c472a9283b954aaf084641d0718415bd694b"},
-]
-
 [package.dependencies]
 Django = ">=1.11"
 future = ">=0.16.0"

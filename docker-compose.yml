@@ -16,7 +16,7 @@ services:
     build:
       context: .
       args:
-        REQUIREMENTS_FILE: dev.txt
+        REQUIREMENTS_FILE: requirements.txt
     restart: always
     ports:
       - "8000:8000"
@@ -42,15 +42,15 @@ services:
     #networks:
      # - bhealth-network
 
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - ./:/var/lib/rabbitmq/
-    networks:
-      - bhealth-network
+ # rabbitmq:
+  #  image: rabbitmq:3-management-alpine
+   # ports:
+   #  - "5672:5672"
+    #  - "15672:15672"
+   # volumes:
+   #   - ./:/var/lib/rabbitmq/
+   # networks:
+   #   - bhealth-network
 
 volumes:
   db-data:

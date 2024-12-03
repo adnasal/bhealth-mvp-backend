@@ -229,7 +229,7 @@ class Appointment(models.Model):
     appointment_id = models.BigAutoField(primary_key=True)
     institution_service_id = models.ForeignKey(InstitutionService, related_name='institution_service_name', on_delete=models.DO_NOTHING)
     patient_id = models.ForeignKey(User, related_name='patient', on_delete=models.DO_NOTHING)
-    doctor_id = models.ForeignKey(Doctor, related_name='doctor', on_delete=models.DO_NOTHING)
+    #doctor_id = models.ForeignKey(Doctor, related_name='doctor', on_delete=models.DO_NOTHING)
     datetime = models.DateTimeField(null=True, blank=True)
     description = models.TextField(null=False, default='Default description')
     is_completed = models.BooleanField(default=False)

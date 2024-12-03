@@ -20,7 +20,7 @@ from src.config import common
 from .serializers import InstitutionSerializer, InstitutionServiceViewSerializer, MedicalRecordViewSerializer, \
     PatientSerializer, PatientViewSerializer, InstitutionViewSerializer, AppointmentViewSerializer, MedicalRecordSerializer, \
     AppointmentSerializer, NotificationViewSerializer, NotificationSerializer, \
-    AddRatingSerializer, RequestViewSerializer
+     RequestViewSerializer
 from .tasks import send_appointment_canceled_message, send_appointment_message, download_file, request_updated, \
     upload_pdf, send_request_notification
 
@@ -640,7 +640,7 @@ class ProfileView(GenericAPIView):
 
         return Response(data, status=status.HTTP_200_OK, content_type="application/json")
 
-
+'''
 class RatingAddView(CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = AddRatingSerializer
@@ -668,7 +668,7 @@ class RatingAddView(CreateAPIView):
             return Response("Rating added successfully.", status=status.HTTP_201_CREATED)
         except Institution.DoesNotExist:
             return Response({'Failure': 'Institution you are trying to rate does not exist.'}, status=status.HTTP_404_NOT_FOUND)
-
+'''
 
 class MedicalRecordAddView(CreateAPIView):
     permission_classes = [AllowAny]
