@@ -15,10 +15,10 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from bhealthapp.models import Lab, LabService, Result, Appointment, User, Notification, UserRating, Service
+from bhealthapp.models import Institution, InstitutionService, MedicalRecord, Appointment, User, Notification, Service
 from src.config import common
-from .serializers import LabSerializer, LabServiceViewSerializer, ResultViewSerializer, \
-    PatientSerializer, PatientViewSerializer, LabViewSerializer, AppointmentViewSerializer, ResultSerializer, \
+from .serializers import InstitutionSerializer, InstitutionServiceViewSerializer, MedicalRecordViewSerializer, \
+    PatientSerializer, PatientViewSerializer, InstitutionViewSerializer, AppointmentViewSerializer, MedicalRecordSerializer, \
     AppointmentSerializer, NotificationViewSerializer, NotificationSerializer, \
     AddRatingSerializer, RequestViewSerializer
 from .tasks import send_appointment_canceled_message, send_appointment_message, download_file, request_updated, \
@@ -41,7 +41,7 @@ class ValidateQueryParams(serializers.Serializer):
     city = fields.RegexField(
         "^[\u0621-\u064A\u0660-\u0669 a-zA-Z]{3,30}$", required=False
     )
-    lab = fields.RegexField(
+    institution = fields.RegexField(
         "^[\u0621-\u064A\u0660-\u0669 a-zA-Z]{3,30}$", required=False
     )
     service = fields.RegexField(
@@ -96,11 +96,11 @@ class UserLogin(GenericAPIView):
                 user_type = 'Patient'
             except User.DoesNotExist:
                 try:
-                    lab = Lab.objects.get(email=email)
-                    user_id = lab.pk
-                    user_type = 'Lab'
-                    user = lab
-                except Lab.DoesNotExist:
+                    institution = Institution.objects.get(email=email)
+                    user_id = institution.pk
+                    user_type = 'Institution'
+                    user = institution
+                except Institution.DoesNotExist:
                     return Response({'Error': 'Invalid email or password.'}, status=status.HTTP_401_UNAUTHORIZED)
 
             if user_type is 'Patient':
@@ -120,8 +120,8 @@ class UserLogin(GenericAPIView):
             return Response({'Error': 'An error occurred during login.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class DownloadResult(GenericAPIView):
-    serializer_class = ResultSerializer
+class DownloadMedicalRecord(GenericAPIView):
+    serializer_class = MedicalRecordSerializer
     permission_classes = [AllowAny]
 
     def get(self, request):
@@ -129,33 +129,33 @@ class DownloadResult(GenericAPIView):
             param = self.request.query_params.get('pk', default=None)
             if param is None:
                 return Response('Please add primary key.')
-            result = Result.objects.get(pk=param)
-        except Result.DoesNotExist:
-            return Response({'Failure': 'Result does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+            medical_record = MedicalRecord.objects.get(pk=param)
+        except MedicalRecord.DoesNotExist:
+            return Response({'Failure': 'MedicalRecord does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
-        file_path = os.path.join(common.MEDIA_ROOT, result.pdf.name)
+        file_path = os.path.join(common.MEDIA_ROOT, medical_record.pdf.name)
         if os.path.exists(file_path):
 
-            download_file.delay(file_path, result.pdf.name)
+            download_file.delay(file_path, medical_record.pdf.name)
             return Response({'File download has started asynchronously.'}, status=status.HTTP_201_CREATED)
         else:
             return Response("Cannot download the file.", status=status.HTTP_404_NOT_FOUND)
 
 
-class LabCreate(GenericAPIView):
-    serializer_class = LabSerializer
+class InstitutionCreate(GenericAPIView):
+    serializer_class = InstitutionSerializer
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = LabSerializer(data=request.data)
+        serializer = InstitutionSerializer(data=request.data)
         if serializer.is_valid():
             password = serializer.validated_data.get('password')
             if password:
                 hashed_password = make_password(password)
                 serializer.validated_data['password'] = hashed_password
 
-            lab = serializer.save()
-            return Response({'Success': 'New laboratory has been successfully added.'}, status=status.HTTP_201_CREATED)
+            institution = serializer.save()
+            return Response({'Success': 'New institution has been successfully added.'}, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -166,17 +166,17 @@ class AppointmentAddView(CreateAPIView):
 
     def create(self, request, **kwargs):
         try:
-            lab_id = request.data.get('lab_appointment')
+            institution_id = request.data.get('institution_appointment')
             service_id = request.data.get('service_appointment')
             patient_id = request.data.get('patient')
             date = request.data.get('date')
 
-            lab = Lab.objects.get(pk=lab_id)
+            institution = Institution.objects.get(pk=institution_id)
             service = Service.objects.get(pk=service_id)
             patient = User.objects.get(pk=patient_id)
 
             appointment = Appointment.objects.create(
-                lab_appointment=lab,
+                institution_appointment=institution,
                 service_appointment=service,
                 patient=patient,
                 date=date,
@@ -186,7 +186,7 @@ class AppointmentAddView(CreateAPIView):
 
             return Response({'Appointment added successfully.'}, status=status.HTTP_201_CREATED)
 
-        except (Lab.DoesNotExist, Service.DoesNotExist, User.DoesNotExist):
+        except (Institution.DoesNotExist, Service.DoesNotExist, User.DoesNotExist):
             return Response({'Failure': 'One or more related objects do not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
 
@@ -231,27 +231,27 @@ class NotificationListView(ListAPIView):
             patient_id = int(param.get('patient'))
             queryset = queryset.filter(notification_appointment__patient=patient_id)
 
-        elif param.get('lab') is not None:
-            lab_id = int(param.get('lab'))
-            queryset = queryset.filter(notification_appointment__lab_appointment=lab_id)
+        elif param.get('institution') is not None:
+            institution_id = int(param.get('institution'))
+            queryset = queryset.filter(notification_appointment__institution_appointment=institution_id)
 
         return queryset
 
 
-class LabUpdateView(GenericAPIView):
+class InstitutionUpdateView(GenericAPIView):
     permission_classes = [AllowAny]
-    serializer_class = LabSerializer
+    serializer_class = InstitutionSerializer
 
     def put(self, request):
         try:
             param = self.request.query_params.get('pk', default=None)
             if param is None:
                 return Response('Please add primary key.')
-            Lab.objects.get(pk=param)
-        except Lab.DoesNotExist:
-            return Response({'Failure': 'Lab does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+            Institution.objects.get(pk=param)
+        except Institution.DoesNotExist:
+            return Response({'Failure': 'Institution does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = LabSerializer(instance=get_object_or_404(Lab, pk=param), data=request.data)
+        serializer = InstitutionSerializer(instance=get_object_or_404(Institution, pk=param), data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -259,9 +259,9 @@ class LabUpdateView(GenericAPIView):
                         status=status.HTTP_202_ACCEPTED)
 
 
-class LabListView(ListAPIView):
+class InstitutionListView(ListAPIView):
     permission_classes = [AllowAny]
-    serializer_class = LabViewSerializer
+    serializer_class = InstitutionViewSerializer
     ordering = ['-id']
     pagination_class = CustomPagination
     search_fields = ['name', 'city', 'address']
@@ -273,12 +273,12 @@ class LabListView(ListAPIView):
         query_params = ValidateQueryParams(data=param)
         query_params.is_valid(raise_exception=True)
 
-        queryset = Lab.objects.all().order_by('id')
+        queryset = Institution.objects.all().order_by('id')
 
         if param.get('search') is not None:
 
             search = param.get('search')
-            query_set = queryset.filter(Q(lab__name__contains=search) | Q(service__name__contains=search))
+            query_set = queryset.filter(Q(institution__name__contains=search) | Q(service__name__contains=search))
 
         elif param.get('city') is not None:
             query_set = queryset.filter(city=param.get('city'))
@@ -295,28 +295,28 @@ class LabListView(ListAPIView):
         return query_set
 
 
-class LabView(GenericAPIView):
+class InstitutionView(GenericAPIView):
     permission_classes = [AllowAny]
-    serializer_class = LabViewSerializer
+    serializer_class = InstitutionViewSerializer
 
     def get(self, request):
         try:
             param = self.request.query_params.get('pk', default=None)
             if param is None:
                 return Response('Please add primary key.')
-            lab = Lab.objects.get(pk=param)
-        except Lab.DoesNotExist:
-            return Response({'Failure': 'Lab does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+            institution = Institution.objects.get(pk=param)
+        except Institution.DoesNotExist:
+            return Response({'Failure': 'Institution does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = LabViewSerializer(lab)
+        serializer = InstitutionViewSerializer(institution)
         data = serializer.data
 
         return Response(data, status=status.HTTP_200_OK, content_type="application/json")
 
 
-class LabServiceListView(ListAPIView):
+class InstitutionServiceListView(ListAPIView):
     permission_classes = [AllowAny]
-    serializer_class = LabServiceViewSerializer
+    serializer_class = InstitutionServiceViewSerializer
     ordering = ['-id']
     pagination_class = CustomPagination
 
@@ -325,21 +325,21 @@ class LabServiceListView(ListAPIView):
     def get_queryset(self, *args, **kwargs):
         param = self.request.query_params
 
-        queryset = LabService.objects.all().order_by('id')
+        queryset = InstitutionService.objects.all().order_by('id')
 
         if param.get('search') is not None:
 
             search = param.get('search')
-            query_set = queryset.filter(Q(lab__name__contains=search) | Q(service__name__contains=search))
+            query_set = queryset.filter(Q(institution__name__contains=search) | Q(service__name__contains=search))
 
         elif param.get('city') is not None:
-            query_set = queryset.filter(lab_service__city=param.get('city'))
+            query_set = queryset.filter(institution_service__city=param.get('city'))
 
-        elif param.get('lab') is not None:
-            query_set = queryset.filter(lab_service__pk=param.get('lab'))
+        elif param.get('institution') is not None:
+            query_set = queryset.filter(institution_service__pk=param.get('institution'))
 
         elif param.get('service') is not None:
-            query_set = queryset.filter(lab_service__city__contains=param.get('service'))
+            query_set = queryset.filter(institution_service__city__contains=param.get('service'))
 
         else:
             query_set = queryset
@@ -347,64 +347,64 @@ class LabServiceListView(ListAPIView):
         return query_set
 
 
-class LabServiceView(GenericAPIView):
+class InstitutionServiceView(GenericAPIView):
     permission_classes = [AllowAny]
-    serializer_class = LabServiceViewSerializer
+    serializer_class = InstitutionServiceViewSerializer
 
     def get(self, request):
         try:
             param = self.request.query_params.get('pk', default=None)
             if param is None:
                 return Response('Please add primary key.')
-            lab = LabService.objects.get(pk=param)
-        except LabService.DoesNotExist:
+            institution = InstitutionService.objects.get(pk=param)
+        except InstitutionService.DoesNotExist:
             return Response({'Failure': 'Service does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = LabServiceViewSerializer(lab)
+        serializer = InstitutionServiceViewSerializer(institution)
         data = serializer.data
 
         return Response(data, status=status.HTTP_200_OK, content_type="application/json")
 
 
-class LabAddView(CreateAPIView):
+class InstitutionAddView(CreateAPIView):
     permission_classes = [AllowAny]
-    serializer_class = LabSerializer
+    serializer_class = InstitutionSerializer
 
     def create(self, request, **kwargs):
         param = self.request.query_params.get('pk', default=None)
-        lab = Lab.objects.get(pk=param)
+        institution = Institution.objects.get(pk=param)
 
-        if lab.exists():
-            return Response({'Failure': 'Lab already exists.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        if institution.exists():
+            return Response({'Failure': 'Institution already exists.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        serializer = LabSerializer(data=request.data)
+        serializer = InstitutionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
         return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
 
 
-class LabRemoveView(DestroyAPIView):
+class InstitutionRemoveView(DestroyAPIView):
     permission_classes = [IsAdminUser]
-    queryset = Lab.objects.all()
+    queryset = Institution.objects.all()
 
     def delete(self, request, **kwargs):
         try:
             param = self.request.query_params.get('pk', default=None)
             if param is None:
                 return Response('Please add primary key.')
-            lab = Lab.objects.get(pk=param)
-        except Lab.DoesNotExist:
+            institution = Institution.objects.get(pk=param)
+        except Institution.DoesNotExist:
             return Response({'Failure': 'Article does not exist or has been already removed.'},
                             status=status.HTTP_404_NOT_FOUND)
-        response = lab
+        response = institution
         response.delete()
-        return Response({"You have successfully deleted desired lab."}, status=status.HTTP_200_OK)
+        return Response({"You have successfully deleted desired institution."}, status=status.HTTP_200_OK)
 
 
-class ResultListView(ListAPIView):
+class MedicalRecordListView(ListAPIView):
     permission_classes = [AllowAny]
-    serializer_class = ResultViewSerializer
+    serializer_class = MedicalRecordViewSerializer
     ordering = ['-id']
     pagination_class = CustomPagination
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
@@ -415,33 +415,33 @@ class ResultListView(ListAPIView):
         if param.get('patient') is not None:
 
             patient = param.get('patient')
-            query_set = Result.objects.filter(appointment__patient=patient)
+            query_set = MedicalRecord.objects.filter(appointment__patient=patient)
 
         elif param.get('appointment') is not None:
 
             appointment = param.get('appointment')
-            query_set = Result.objects.filter(appointment=appointment)
+            query_set = MedicalRecord.objects.filter(appointment=appointment)
 
         else:
-            query_set = Result.objects.none()
+            query_set = MedicalRecord.objects.none()
 
         return query_set
 
 
-class ResultView(GenericAPIView):
+class MedicalRecordView(GenericAPIView):
     permission_classes = [AllowAny]
-    serializer_class = ResultViewSerializer
+    serializer_class = MedicalRecordViewSerializer
 
     def get(self, request):
         try:
             param = self.request.query_params.get('pk', default=None)
             if param is None:
                 return Response('Please add primary key.')
-            result = Result.objects.get(pk=param)
-        except Result.DoesNotExist:
-            return Response({'Failure': 'Result does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+            medical_record = MedicalRecord.objects.get(pk=param)
+        except MedicalRecord.DoesNotExist:
+            return Response({'Failure': 'MedicalRecord does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = ResultViewSerializer(result)
+        serializer = MedicalRecordViewSerializer(medical_record)
         data = serializer.data
 
         return Response(data, status=status.HTTP_200_OK, content_type="application/json")
@@ -514,7 +514,7 @@ class PastAppointmentsUserView(ListAPIView):
         return Appointment.objects.none()
 
 
-class UpcomingAppointmentsLabView(ListAPIView):
+class UpcomingAppointmentsInstitutionView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = AppointmentSerializer
     pagination_class = CustomPagination
@@ -523,14 +523,14 @@ class UpcomingAppointmentsLabView(ListAPIView):
     ordering_fields = ['-date']
 
     def get_queryset(self):
-        lab_id = self.request.query_params.get('lab', default=None)
+        institution_id = self.request.query_params.get('institution', default=None)
 
-        if lab_id is not None:
-            lab = Lab.objects.get(pk=lab_id)
+        if institution_id is not None:
+            institution = Institution.objects.get(pk=institution_id)
             today = date.today()
             future_date = today + relativedelta(years=5)
             queryset = Appointment.objects.filter(
-                lab_appointment=lab,
+                institution_appointment=institution,
                 date__gte=today,
                 date__lte=future_date,
                 status=Appointment.STATUS_CONFIRMED
@@ -541,7 +541,7 @@ class UpcomingAppointmentsLabView(ListAPIView):
         return Appointment.objects.none()
 
 
-class PastAppointmentsLabView(ListAPIView):
+class PastAppointmentsInstitutionView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = AppointmentSerializer
     pagination_class = CustomPagination
@@ -550,14 +550,14 @@ class PastAppointmentsLabView(ListAPIView):
     ordering_fields = ['-date']
 
     def get_queryset(self, *args, **kwargs):
-        lab_id = self.request.query_params.get('lab', default=None)
+        institution_id = self.request.query_params.get('institution', default=None)
 
-        if lab_id is not None:
-            lab = Lab.objects.get(pk=lab_id)
+        if institution_id is not None:
+            institution = Institution.objects.get(pk=institution_id)
             today = datetime.now().date()
             past_date = today - relativedelta(years=5)
             query_set = Appointment.objects.filter(
-                lab_appointment=lab,
+                institution_appointment=institution,
                 date__gte=past_date,
                 date__lte=today,
                 status=Appointment.STATUS_CONFIRMED
@@ -581,10 +581,10 @@ class RequestsView(ListAPIView):
         query_params = ValidateQueryParams(data=param)
         query_params.is_valid(raise_exception=True)
 
-        if param.get('lab_appointment') is not None:
-            lab = param.get('lab_appointment')
+        if param.get('institution_appointment') is not None:
+            institution = param.get('institution_appointment')
 
-            query_set = Appointment.objects.filter(lab_appointment=lab, status=0)
+            query_set = Appointment.objects.filter(institution_appointment=institution, status=0)
 
             return query_set
 
@@ -599,11 +599,11 @@ class PatientsView(ListAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
 
     def get_queryset(self, *args, **kwargs):
-        param = self.request.query_params.get('lab')
+        param = self.request.query_params.get('institution')
 
         if param is not None:
-            lab = Lab.objects.get(pk=param)
-            appointments = Appointment.objects.filter(lab_appointment=lab)
+            institution = Institution.objects.get(pk=param)
+            appointments = Appointment.objects.filter(institution_appointment=institution)
             query_set = User.objects.filter(patient__in=appointments)
 
             return query_set
@@ -613,13 +613,13 @@ class PatientsView(ListAPIView):
 
 class WeRecommendView(ListAPIView):
     permission_classes = [AllowAny]
-    serializer_class = LabViewSerializer
+    serializer_class = InstitutionViewSerializer
     pagination_class = CustomPagination
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
 
     def get_queryset(self):
-        labs = Lab.objects.order_by('-average_rating')[:6]
-        return labs
+        institutions = Institution.objects.order_by('-average_rating')[:6]
+        return institutions
 
 
 class ProfileView(GenericAPIView):
@@ -650,7 +650,7 @@ class RatingAddView(CreateAPIView):
             param = self.request.query_params.get('pk', default=None)
             if param is None:
                 return Response('Please add primary key.')
-            lab = Lab.objects.get(pk=param)
+            institution = Institution.objects.get(pk=param)
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
 
@@ -658,21 +658,21 @@ class RatingAddView(CreateAPIView):
             user = User.objects.get(pk=user_id)
             rating_value = request.data.get('rating')
 
-            user_rating = UserRating.objects.create(user=user, lab=lab, rating=rating_value)
+            user_rating = UserRating.objects.create(user=user, institution=institution, rating=rating_value)
 
-            new_average_rating = UserRating.objects.filter(lab=lab).aggregate(average_rating=Avg('rating'))[
+            new_average_rating = UserRating.objects.filter(institution=institution).aggregate(average_rating=Avg('rating'))[
                 'average_rating']
-            lab.average_rating = new_average_rating if new_average_rating is not None else 0.0
-            lab.save()
+            institution.average_rating = new_average_rating if new_average_rating is not None else 0.0
+            institution.save()
 
             return Response("Rating added successfully.", status=status.HTTP_201_CREATED)
-        except Lab.DoesNotExist:
-            return Response({'Failure': 'Lab you are trying to rate does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+        except Institution.DoesNotExist:
+            return Response({'Failure': 'Institution you are trying to rate does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
 
-class ResultAddView(CreateAPIView):
+class MedicalRecordAddView(CreateAPIView):
     permission_classes = [AllowAny]
-    serializer_class = ResultSerializer
+    serializer_class = MedicalRecordSerializer
 
     def create(self, request, **kwargs):
         try:
@@ -682,20 +682,20 @@ class ResultAddView(CreateAPIView):
 
             app = Appointment.objects.get(pk=param)
 
-            serializer = ResultSerializer(data=request.data)
+            serializer = MedicalRecordSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
-            result = Result.objects.last()
-            result.appointment = app
-            result.save(update_fields=['appointment'])
+            medical_record = MedicalRecord.objects.last()
+            medical_record.appointment = app
+            medical_record.save(update_fields=['appointment'])
 
         except Appointment.DoesNotExist:
-            return Response({'Failure': 'Appointment you are trying to add result for does not exist.'},
+            return Response({'Failure': 'Appointment you are trying to add medical_record for does not exist.'},
                             status=status.HTTP_404_NOT_FOUND)
 
         upload_pdf(appointment_id=param)
-        return Response("Result added successfully.", status=status.HTTP_200_OK)
+        return Response("MedicalRecord added successfully.", status=status.HTTP_200_OK)
 
 
 class AppointmentUpdateView(GenericAPIView):
@@ -713,7 +713,7 @@ class AppointmentUpdateView(GenericAPIView):
                             status.HTTP_404_NOT_FOUND)
 
         if 'status' in request.data and request.data['status'] == 1 and appointment.date is not None:
-            return Response({'Failure': 'You cannot confirm an appointment that has not been confirmed by lab.'},
+            return Response({'Failure': 'You cannot confirm an appointment that has not been confirmed by institution.'},
                             status.HTTP_400_BAD_REQUEST)
         else:
             serializer = AppointmentSerializer(instance=appointment, data=request.data)

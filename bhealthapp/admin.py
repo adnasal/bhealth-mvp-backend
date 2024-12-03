@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from bhealthapp.models import City, User, Type, Service, Result, Appointment, Lab, UserRating, Notification
+from bhealthapp.models import City, User, Service, MedicalRecord, Appointment, Institution, Notification
 
 
 @admin.register(City)
@@ -9,17 +9,15 @@ class CityAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ['name', 'country']
-        }),
-        ('Further information:', {
-            'fields': ['postal_code']
+            'fields': ['city_name', 'country_id']
         }),
     )
 
-    list_display = ['name', 'country', 'postal_code']
+    list_display = ['city_name', 'country_id']
     classes = ['wide', 'extrapretty']
-    list_filter = ['country']
-    search_fields = ("name__startswith",)
+    list_filter = ['country_id']
+    search_fields = ('city_name__startswith',)
+
 
 
 # admin.site.register(City, CityAdmin)
@@ -30,83 +28,48 @@ class PatientAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': [
-                'profile_picture', 'profile_link', 'password', 'phone_number', 'email', 'dob',
-                'address', 'city', 'is_blocked', 'is_email_verified', 'gender']
+                'username', 'party', 'password', 'phone_number', 'email', 'dob',
+                'is_blocked', 'is_email_verified', 'gender']
         }),
     )
 
-    list_display = ['profile_picture', 'profile_link', 'password', 'phone_number', 'email', 'dob',
-                    'address', 'city', 'is_blocked', 'is_email_verified', 'gender']
+    list_display = ['username', 'party', 'password', 'phone_number', 'email', 'dob',
+                    'is_blocked', 'is_email_verified', 'gender']
 
     empty_value_display = '-empty-'
-    list_filter = ['city', 'gender']
+    list_filter = ['party', 'gender']
 
 # admin.site.register(Patient, PatientAdmin)
 
 
-@admin.register(Lab)
-class LabAdmin(admin.ModelAdmin):
+@admin.register(Institution)
+class InstitutionAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['city', 'name', 'password', 'address', 'phone_number', 'email', 'website', 'working_days']
+            'fields': ['city_id', 'institution_name', 'password', 'address', 'phone_numbers', 'emails', 'website', 'rating']
         }),
     )
 
-    list_display = ['city', 'name', 'password', 'address', 'phone_number', 'email', 'website']
+    list_display = ['city_id', 'institution_name', 'password', 'address', 'phone_numbers', 'emails', 'website']
 
     empty_value_display = '-empty-'
-    list_filter = ['name', 'city']
-    search_fields = ("name__startswith",)
+    list_filter = ['institution_name', 'city_id', 'rating']
+    search_fields = ("institution_name__startswith",)
 
 
 # admin.site.register(Lab, LabAdmin)
-
-
-@admin.register(UserRating)
-class UserRatingAdmin(admin.ModelAdmin):
-    fieldsets = (
-        (None, {
-            'fields': ['user', 'rating', 'lab']
-        }),
-    )
-
-    list_display = ['user', 'rating', 'lab']
-    empty_value_display = '-empty-'
-    list_filter = ['lab']
-    search_fields = ("lab__startswith",)
-
-
-# admin.site.register(UserRating, UserRatingAdmin)
-
-
-@admin.register(Type)
-class TypeAdmin(admin.ModelAdmin):
-    fieldsets = (
-        (None, {
-            'fields': ['name', 'description']
-        }),
-    )
-
-    list_display = ['name', 'description']
-    empty_value_display = '-empty-'
-    list_filter = ['name']
-    search_fields = ("name__startswith",)
-
-
-# admin.site.register(Type, TypeAdmin)
-
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['name', 'duration', 'type']
+            'fields': ['service_name', 'service_category', 'description']
         }),
     )
 
-    list_display = ['name', 'duration', 'type']
+    list_display = ['service_name', 'service_category', 'description']
     empty_value_display = '-empty-'
-    list_filter = ['name', 'type']
+    list_filter = ['service_name', 'service_category']
 
 
 # admin.site.register(Service, ServiceAdmin)
@@ -116,30 +79,30 @@ class ServiceAdmin(admin.ModelAdmin):
 class AppointmentAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['lab_appointment', 'service_appointment', 'date', 'patient', 'status']
+            'fields': ['institution_service_id', 'doctor_id', 'datetime', 'patient_id', 'appointment_status']
         }),
     )
 
-    list_display = ['lab_appointment', 'service_appointment', 'date', 'patient', 'status']
-    date_hierarchy = 'date'
+    list_display = ['institution_service_appointment', 'doctor_id', 'datetime', 'patient_id', 'appointment_status']
+    date_hierarchy = 'datetime'
     empty_value_display = '-empty-'
-    list_filter = ['lab_appointment', 'service_appointment', 'status', 'patient']
+    list_filter = ['institution_service_appointment', 'doctor_id', 'appointment_status', 'patient_id']
 
 
 # admin.site.register(Appointment, AppointmentAdmin)
 
 
-@admin.register(Result)
-class ResultAdmin(admin.ModelAdmin):
+@admin.register(MedicalRecord)
+class MedicalRecordAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['appointment', 'pdf']
+            'fields': ['appointment_id', 'user_id', 'file']
         }),
     )
 
-    list_display = ['appointment', 'pdf']
+    list_display = ['appointment_id','user_id', 'file']
     empty_value_display = '-empty-'
-    list_filter = ['appointment']
+    list_filter = ['appointment_id', 'user_id']
 
 
 # admin.site.register(Result, ResultAdmin)
@@ -148,15 +111,14 @@ class ResultAdmin(admin.ModelAdmin):
 class NotificationAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['notification_appointment', 'message', 'is_confirmed',
+            'fields': ['user_id', 'payload_data', 'is_confirmed',
                        ]
         }),
     )
 
-    list_display = ['notification_appointment', 'message', 'is_confirmed',
+    list_display = ['user_id', 'payload_data', 'is_confirmed',
                     ]
     empty_value_display = '-empty-'
-    list_filter = ['notification_appointment', 'is_confirmed',
-                   ]
+    list_filter = ['user_id', 'is_confirmed']
 
 # admin.site.register(Notification, NotificationAdmin)

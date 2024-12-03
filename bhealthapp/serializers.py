@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from bhealthapp.models import Appointment, Lab, User, Type, City, Service, Result, UserRating, LabService, Notification
+from bhealthapp.models import Appointment, Institution, User, City, Service, MedicalRecord, InstitutionService, \
+    Notification, Country
 
 
 class ChoiceField(serializers.ChoiceField):
@@ -21,23 +22,34 @@ class ChoiceField(serializers.ChoiceField):
         self.fail('invalid_choice', input=data)
 
 
+class CountrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Country
+        fields = [
+            "country_name",
+            "country_code"
+        ]
+
+
 class CitySerializer(serializers.ModelSerializer):
+    country = CountrySerializer()
+
     class Meta:
         model = City
         fields = [
-            "name",
+            "city_name",
             "country",
-            "postal_code",
         ]
 
 
 class CityViewSerializer(serializers.ModelSerializer):
+    country = CountrySerializer()
+
     class Meta:
         model = City
         fields = [
-            "name",
-            "country",
-            "postal_code",
+            "city_name",
+             "country"
         ]
         depth = 1
 
@@ -65,15 +77,11 @@ class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "first_name",
-            "last_name",
-            "profile_picture",
+            "username",
             "password",
             "phone_number",
             "email",
             "dob",
-            "address",
-            "city",
             "gender",
         ]
 
@@ -85,14 +93,10 @@ class PatientViewSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "username",
-            "profile_picture",
-            "profile_link",
             "password",
             "phone_number",
             "email",
             "dob",
-            "address",
-            "city",
             "is_blocked",
             "is_email_verified",
             "gender",
@@ -100,117 +104,82 @@ class PatientViewSerializer(serializers.ModelSerializer):
         depth = 1
 
 
-class LabSerializer(serializers.ModelSerializer):
+class InstitutionSerializer(serializers.ModelSerializer):
     city = serializers.StringRelatedField()
     email = serializers.EmailField(
         required=True,
-        validators=[UniqueValidator(queryset=Lab.objects.all())]
+        validators=[UniqueValidator(queryset=Institution.objects.all())]
     )
 
     password = serializers.CharField(min_length=8)
 
     class Meta:
-        model = Lab
+        model = Institution
         fields = [
-            "city",
-            "name",
+            "city_id",
+            "institution_name",
             "password",
             "address",
-            "phone_number",
-            "email",
+            "phone_numbers",
+            "emails",
             "website",
-            "working_days",
-            "profile_picture",
-            "average_rating"
+            "description",
+            "rating"
         ]
 
 
-class LabViewSerializer(serializers.ModelSerializer):
+class InstitutionViewSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Lab
+        model = Institution
         fields = [
             "pk",
-            "city",
-            "name",
+            "city_id",
+            "institution_name",
             "password",
             "address",
-            "phone_number",
-            "email",
+            "phone_numbers",
+            "emails",
             "description",
             "website",
-            "profile_picture",
-            "average_rating",
-            "working_days"
-        ]
-        depth = 1
-
-
-class LabServiceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LabService
-        fields = [
-            "lab_service",
-            "service",
-        ]
-
-
-class LabServiceViewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LabService
-        fields = [
-            "lab_service",
-            "service",
-        ]
-        depth = 1
-
-
-class UserRatingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserRating
-        fields = [
-            "user",
             "rating",
-        ]
-
-
-class UserRatingViewSerializer(serializers.ModelSerializer):
-    rating = ChoiceField(choices=UserRating.RATING_CHOICES)
-
-    class Meta:
-        model = UserRating
-        fields = [
-            "user",
-            "rating",
+            "description"
         ]
         depth = 1
 
 
-class TypeSerializer(serializers.ModelSerializer):
+class InstitutionServiceSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Type
+        model = InstitutionService
         fields = [
-            "name",
+            "institution_id",
+            "service_id",
             "description",
+            "price"
         ]
 
 
-class TypeViewSerializer(serializers.ModelSerializer):
+class InstitutionServiceViewSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Type
+        model = InstitutionService
         fields = [
-            "name",
+            "institution_id",
+            "service_id",
             "description",
+            "price"
         ]
         depth = 1
+
+
 
 
 class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
         fields = [
-            "name",
-            "duration",
-            "type",
+            "service_name",
+            "service_category",
+            "description",
+            "is_special_offer"
         ]
 
 
@@ -218,13 +187,15 @@ class ServiceViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
         fields = [
-            "name",
-            "duration",
-            "type",
+            "service_name",
+            "service_category",
+            "description",
+            "is_special_offer"
         ]
         depth = 1
 
 
+'''
 class AppointmentPatientSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField()
 
@@ -236,15 +207,16 @@ class AppointmentPatientSerializer(serializers.ModelSerializer):
         ]
 
 
+
 class AppointmentSerializer(serializers.ModelSerializer):
-    lab_appointment = serializers.StringRelatedField()
+    institution_appointment = serializers.StringRelatedField()
     service_appointment = serializers.SerializerMethodField()
     patient = AppointmentPatientSerializer(read_only=True)
 
     class Meta:
         model = Appointment
         fields = [
-            "lab_appointment",
+            "institution_appointment",
             "service_appointment",
             "patient",
             "date",
@@ -255,32 +227,24 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
     def get_service_appointment(self, obj):
         return obj.service_appointment.name
-
+'''
 
 class AppointmentViewSerializer(serializers.ModelSerializer):
-    lab_appointment = LabViewSerializer()
+    institution_appointment = InstitutionViewSerializer()
 
     class Meta:
         model = Appointment
         fields = [
-            "lab_appointment",
-            "service_appointment",
-            "date",
-            "patient",
-            "status",
-            "fee",
-            "doctor"
+            "doctor_id",
+            "institution_service_id",
+            "datetime",
+            "patient_id",
+            "appointment_status",
+            "description",
+            "is_completed"
         ]
         depth = 1
 
-
-class AddRatingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserRating
-        fields = [
-            "user",
-            "rating"
-        ]
 
 
 class AppointmentCancelSerializer(serializers.Serializer):
@@ -292,21 +256,23 @@ class AppointmentCancelSerializer(serializers.Serializer):
         return instance
 
 
-class ResultSerializer(serializers.ModelSerializer):
+class MedicalRecordSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Result
+        model = MedicalRecord
         fields = [
-            "appointment",
-            "pdf",
+            "appointment_id",
+            "user_id",
+            "file"
         ]
 
 
-class ResultViewSerializer(serializers.ModelSerializer):
+class MedicalRecordViewSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Result
+        model = MedicalRecord
         fields = [
-            "appointment",
-            "pdf",
+            "appointment_id",
+            "user_id",
+            "file"
         ]
         depth = 1
 
@@ -317,11 +283,10 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = [
-            "id",
-            "notification_appointment",
-            "message",
+            "notification_id",
+            "user_id",
+            "payload_data",
             "is_confirmed",
-            "notification_date"
         ]
 
 
@@ -331,11 +296,10 @@ class NotificationViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = [
-            "id",
-            "notification_appointment",
-            "message",
+             "notification_id",
+            "user_id",
+            "payload_data",
             "is_confirmed",
-            "notification_date"
         ]
         depth = 1
 
@@ -344,7 +308,7 @@ class RequestViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
         fields = [
-            "patient",
-            "service_appointment"
+            "patient_id",
+            "appointment_id",
         ]
         depth = 1

@@ -91,8 +91,8 @@ class User(AbstractUser):
     )
     #city = models.ForeignKey(City, related_name='user_city', on_delete=models.DO_NOTHING, default=1)
     #is_blocked = models.BooleanField(default=False)
-    email_verified = models.BooleanField(default=False)
-    number_verified = models.BooleanField(default=False)
+    is_email_verified = models.BooleanField(default=False)
+    is_number_verified = models.BooleanField(default=False)
     gender = models.PositiveSmallIntegerField(
         choices=GENDER_CHOICES,
         default=GENDER_FEMALE,
@@ -344,7 +344,7 @@ class Drug(models.Model):
     drug_type = models.DateTimeField(auto_now_add=True)
     dosage = models.TextField(null=False, default=None)
     description = models.TextField(null=False, default=None)
-    prescription_required = models.BooleanField(default=False)
+    is_prescription_required = models.BooleanField(default=False)
     side_effects = models.TextField(null=False, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
