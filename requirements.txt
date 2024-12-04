@@ -178,5 +178,3 @@ celery>=5.3.4,<6.0
 kombu==5.3.4  # or compatible version
 vine
 load-dotenv
-
-

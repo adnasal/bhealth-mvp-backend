@@ -1,9 +1,10 @@
-from datetime import datetime
 
+import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.dispatch import receiver
 from django.urls import reverse
+from django.utils import timezone
 from django_rest_passwordreset.signals import reset_password_token_created
 
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -36,7 +37,7 @@ class Country(models.Model):
     country_id = models.BigAutoField(primary_key=True)
     country_name = models.TextField(default='Bosnia and Herzegovina', max_length=255, null=False)
     country_code = models.TextField(default='BA', max_length=2, unique=True, null=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -52,7 +53,7 @@ class City(models.Model):
     city_id = models.BigAutoField(primary_key=True)
     city_name = models.TextField(default='Sarajevo', max_length=255, null=False)
     country_id = models.ForeignKey(Country, related_name='cities', on_delete=models.DO_NOTHING)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -138,7 +139,7 @@ class Institution(models.Model):
     #profile_picture = models.ImageField(default='default.jpg', upload_to='profile_pics', null=True)
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
     founded = models.DateField(null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     is_office = models.BooleanField(default=False)
 
@@ -210,7 +211,7 @@ class Service(models.Model):
     service_category = models.TextField(null=False, max_length=255, default=None)
     description = models.TextField(null=False, default='Default description')
     is_special_offer = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
 
@@ -221,19 +222,19 @@ class InstitutionService(models.Model):
     description = models.TextField(null=False, default='Default description')
     price = models.DecimalField(null=False, max_digits=7, decimal_places=2, default=None)
     is_active = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
 
 class Appointment(models.Model):
-    appointment_id = models.BigAutoField(primary_key=True)
-    institution_service_id = models.ForeignKey(InstitutionService, related_name='institution_service_name', on_delete=models.DO_NOTHING)
-    patient_id = models.ForeignKey(User, related_name='patient_appointment', on_delete=models.DO_NOTHING)
+    appointment_id = models.BigAutoField(primary_key=True, default=uuid.uuid4())
+    institution_service_id = models.ForeignKey(InstitutionService, related_name='institution_service_name', on_delete=models.DO_NOTHING, null=True)
+    patient_id = models.ForeignKey(User, related_name='patient_appointment', on_delete=models.DO_NOTHING, blank=True, null=True)
     #doctor_id = models.ForeignKey(Doctor, related_name='doctor', on_delete=models.DO_NOTHING)
     datetime = models.DateTimeField(null=True, blank=True)
     description = models.TextField(null=False, default='Default description')
     is_completed = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
     STATUS_PENDING = 0
@@ -254,13 +255,13 @@ class Appointment(models.Model):
 
 class MedicalRecord(models.Model):
     medical_record_id = models.BigAutoField(primary_key=True)
-    appointment_id = models.ForeignKey(Appointment, related_name='appointment_result', on_delete=models.DO_NOTHING)
+    appointment_id = models.ForeignKey(Appointment, related_name='appointment_result', on_delete=models.DO_NOTHING, blank=True, null=True)
     user_id = models.ForeignKey(User, related_name='patient_medical_record', on_delete=models.DO_NOTHING)
     file = models.TextField(default='File')
     message_content = models.TextField(default='Message')
     downloads = models.IntegerField(default=0)
     reference_values = models.JSONField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     #pdf = models.FileField(upload_to='pdf', default='src/results/Patient Medical History Report.pdf')
 
@@ -271,7 +272,7 @@ class Notification(models.Model):
     user_id = models.ForeignKey(User, related_name='notification_user', on_delete=models.DO_NOTHING)
     event_name = models.TextField(default='Event')
     payload_data= models.JSONField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     #is_confirmed = models.BooleanField(default=False)
 
@@ -315,7 +316,7 @@ class NotificationHistory(models.Model):
     event_name = models.TextField(null=False, default=None)
     user_id = models.ForeignKey(User, related_name='notification_history_user', on_delete=models.DO_NOTHING)
     payload_data = models.JSONField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
 
@@ -325,7 +326,7 @@ class InstitutionWorkingHours(models.Model):
     day_of_week = models.TextField(null=False, default=None)
     open_time = models.TimeField(null=False, default=None)
     close_time = models.TimeField(null=False, default=None)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
 class UserSetting(models.Model):
@@ -333,7 +334,7 @@ class UserSetting(models.Model):
     user_id = models.ForeignKey(User, related_name='user_setting', on_delete=models.DO_NOTHING)
     #notifications = models.JSONField(null=True, blank=True)
     additional_data = models.JSONField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
 class Drug(models.Model):
@@ -346,7 +347,7 @@ class Drug(models.Model):
     description = models.TextField(null=False, default=None)
     is_prescription_required = models.BooleanField(default=False)
     side_effects = models.TextField(null=False, default=None)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
 
@@ -354,7 +355,7 @@ class Diagnosis(models.Model):
     diagnosis_id = models.BigAutoField(primary_key=True)
     diagnosis_name = models.TextField(null=False, default=None)
     description = models.TextField(null=False, default=None)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
 class PartyDiagnosis(models.Model):
@@ -364,7 +365,7 @@ class PartyDiagnosis(models.Model):
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(auto_now=True)
     description = models.TextField(null=False, default=None)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
 class Treatment(models.Model):
@@ -374,14 +375,14 @@ class Treatment(models.Model):
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(auto_now=True)
     description = models.TextField(null=False, default=None)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
 class Role(models.Model):
     role_id = models.BigAutoField(primary_key=True)
     role_name = models.TextField(null=False, default=None)
     description = models.TextField(null=False, default=None)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
 class ReferenceValue(models.Model):
@@ -393,7 +394,7 @@ class ReferenceValue(models.Model):
     low_description = models.TextField(null=False, default=None)
     high_description = models.TextField(null=False, default=None)
     normal_description = models.TextField(null=False, default=None)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
 class InstitutionUser(models.Model):
