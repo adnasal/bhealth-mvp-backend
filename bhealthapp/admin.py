@@ -29,12 +29,12 @@ class PatientAdmin(admin.ModelAdmin):
         (None, {
             'fields': [
                 'username', 'party', 'password', 'phone_number', 'email', 'dob',
-                'is_blocked', 'is_email_verified', 'gender']
+                'is_email_verified', 'gender']
         }),
     )
 
     list_display = ['username', 'party', 'password', 'phone_number', 'email', 'dob',
-                    'is_blocked', 'is_email_verified', 'gender']
+                    'is_email_verified', 'gender']
 
     empty_value_display = '-empty-'
     list_filter = ['party', 'gender']
@@ -79,15 +79,20 @@ class ServiceAdmin(admin.ModelAdmin):
 class AppointmentAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['institution_service_id', 'doctor_id', 'datetime', 'patient_id', 'appointment_status']
+            'fields': ['institution_service_id', 'datetime', 'patient_id', 'appointment_status']
         }),
     )
 
-    list_display = ['institution_service_appointment', 'doctor_id', 'datetime', 'patient_id', 'appointment_status']
+    list_display = ['institution_service_appointment', 'datetime', 'patient_id', 'appointment_status']
     date_hierarchy = 'datetime'
     empty_value_display = '-empty-'
-    list_filter = ['institution_service_appointment', 'doctor_id', 'appointment_status', 'patient_id']
+    list_filter = ['institution_service_id', 'appointment_status', 'patient_id']
 
+    def institution_service_appointment(self, obj):
+        return obj.institution_service_id.service_name
+
+    institution_service_appointment.admin_order_field = 'institution_service_id'
+    institution_service_appointment.short_description = 'Institution Service'
 
 # admin.site.register(Appointment, AppointmentAdmin)
 
@@ -111,14 +116,14 @@ class MedicalRecordAdmin(admin.ModelAdmin):
 class NotificationAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['user_id', 'payload_data', 'is_confirmed',
+            'fields': ['user_id', 'payload_data'
                        ]
         }),
     )
 
-    list_display = ['user_id', 'payload_data', 'is_confirmed',
+    list_display = ['user_id', 'payload_data'
                     ]
     empty_value_display = '-empty-'
-    list_filter = ['user_id', 'is_confirmed']
+    list_filter = ['user_id']
 
 # admin.site.register(Notification, NotificationAdmin)

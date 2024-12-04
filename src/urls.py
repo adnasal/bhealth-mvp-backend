@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.urls.static import static
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.urls import reverse_lazy
@@ -82,7 +82,7 @@ urlpatterns = [
     ).without_ui(cache_timeout=0), name='schema-json'),
 
     # Health check
-    path('health/', include('health_check.urls')),
+    #path('health/', include('health_check.urls')),
 
     # Root API
     re_path(r'^$', RedirectView.as_view(url=reverse_lazy('api-root'), permanent=False)),

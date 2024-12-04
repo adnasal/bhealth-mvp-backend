@@ -45,7 +45,7 @@ class Country(models.Model):
     class Meta:
         verbose_name = "Country"
         verbose_name_plural = "Countries"
-        ordering = ['name']
+        ordering = ['country_name']
 
 
 class City(models.Model):
@@ -61,7 +61,7 @@ class City(models.Model):
     class Meta:
         verbose_name = "City"
         verbose_name_plural = "Cities"
-        ordering = ['name']
+        ordering = ['city_name']
 
 
 class User(AbstractUser):
@@ -78,7 +78,7 @@ class User(AbstractUser):
         (USER_STATUS_INACTIVE, 'Inactive'),
     )
     user_id = models.BigAutoField(primary_key=True)
-    username = models.TextField(max_length=150, null=True, blank=True)
+    username = models.TextField(max_length=150, null=True, blank=True, unique=True)
     password = models.TextField(max_length=255)
     phone_number = models.CharField(null=True, blank=True, max_length=255)
     email = models.TextField(null=False, max_length=255)
@@ -216,8 +216,8 @@ class Service(models.Model):
 
 class InstitutionService(models.Model):
     institution_service_id = models.BigAutoField(primary_key=True)
-    service_id = models.ForeignKey(Service, related_name='service_name', on_delete=models.DO_NOTHING)
-    institution_id = models.ForeignKey(Institution, related_name='institution_name', on_delete=models.DO_NOTHING)
+    service_id = models.ForeignKey(Service, related_name='institution_service', on_delete=models.DO_NOTHING)
+    institution_id = models.ForeignKey(Institution, related_name='institution_service_name', on_delete=models.DO_NOTHING)
     description = models.TextField(null=False, default='Default description')
     price = models.DecimalField(null=False, max_digits=7, decimal_places=2, default=None)
     is_active = models.BooleanField(default=False)
@@ -228,7 +228,7 @@ class InstitutionService(models.Model):
 class Appointment(models.Model):
     appointment_id = models.BigAutoField(primary_key=True)
     institution_service_id = models.ForeignKey(InstitutionService, related_name='institution_service_name', on_delete=models.DO_NOTHING)
-    patient_id = models.ForeignKey(User, related_name='patient', on_delete=models.DO_NOTHING)
+    patient_id = models.ForeignKey(User, related_name='patient_appointment', on_delete=models.DO_NOTHING)
     #doctor_id = models.ForeignKey(Doctor, related_name='doctor', on_delete=models.DO_NOTHING)
     datetime = models.DateTimeField(null=True, blank=True)
     description = models.TextField(null=False, default='Default description')
@@ -255,7 +255,7 @@ class Appointment(models.Model):
 class MedicalRecord(models.Model):
     medical_record_id = models.BigAutoField(primary_key=True)
     appointment_id = models.ForeignKey(Appointment, related_name='appointment_result', on_delete=models.DO_NOTHING)
-    user_id = models.ForeignKey(User, related_name='patient', on_delete=models.DO_NOTHING)
+    user_id = models.ForeignKey(User, related_name='patient_medical_record', on_delete=models.DO_NOTHING)
     file = models.TextField(default='File')
     message_content = models.TextField(default='Message')
     downloads = models.IntegerField(default=0)
@@ -313,7 +313,7 @@ class Party(models.Model):
 class NotificationHistory(models.Model):
     notification_id = models.BigAutoField(primary_key=True)
     event_name = models.TextField(null=False, default=None)
-    user_id = models.ForeignKey(User, related_name='notification_user', on_delete=models.DO_NOTHING)
+    user_id = models.ForeignKey(User, related_name='notification_history_user', on_delete=models.DO_NOTHING)
     payload_data = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

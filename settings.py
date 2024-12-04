@@ -46,7 +46,7 @@ INSTALLED_APPS = (
     'django_summernote',  # text editor
     'django_celery_beat',  # task scheduler
     'djmoney',  # money object
-    'django_health_check',
+    #'django_health_check',
     # Your apps
     'src.notifications',
     'src.social',
