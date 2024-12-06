@@ -28,16 +28,16 @@ class PatientAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': [
-                'username', 'party', 'password', 'phone_number', 'email', 'dob',
+                'username', 'party_id', 'password', 'phone_number', 'email', 'dob',
                 'is_email_verified', 'gender']
         }),
     )
 
-    list_display = ['username', 'party', 'password', 'phone_number', 'email', 'dob',
+    list_display = ['username', 'party_id', 'password', 'phone_number', 'email', 'dob',
                     'is_email_verified', 'gender']
 
     empty_value_display = '-empty-'
-    list_filter = ['party', 'gender']
+    list_filter = ['party_id', 'gender']
 
 # admin.site.register(Patient, PatientAdmin)
 
@@ -79,14 +79,14 @@ class ServiceAdmin(admin.ModelAdmin):
 class AppointmentAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['institution_service_id', 'datetime', 'patient_id', 'appointment_status']
+            'fields': ['institution_service_id', 'datetime', 'patient_id', 'status']
         }),
     )
 
-    list_display = ['institution_service_appointment', 'datetime', 'patient_id', 'appointment_status']
+    list_display = ['institution_service_appointment', 'datetime', 'patient_id', 'status']
     date_hierarchy = 'datetime'
     empty_value_display = '-empty-'
-    list_filter = ['institution_service_id', 'appointment_status', 'patient_id']
+    list_filter = ['institution_service_id', 'status', 'patient_id']
 
     def institution_service_appointment(self, obj):
         return obj.institution_service_id.service_name

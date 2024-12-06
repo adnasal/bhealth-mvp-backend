@@ -214,7 +214,7 @@ class UserUpdateView(GenericAPIView):
 class NotificationListView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = NotificationViewSerializer
-    ordering = ['-id']
+    ordering = ['-notification_id']
     pagination_class = CustomPagination
     search_fields = ['notification_appointment']
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
@@ -222,7 +222,7 @@ class NotificationListView(ListAPIView):
     def get_queryset(self, *args, **kwargs):
         param = self.request.query_params
 
-        queryset = Notification.objects.all().order_by('id')
+        queryset = Notification.objects.all().order_by('notification_id')
 
         if param.get('notification_appointment') is not None:
             queryset = queryset.filter(notification_appointment=param.get('notification_appointment'))

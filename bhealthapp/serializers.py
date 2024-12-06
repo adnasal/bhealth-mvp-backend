@@ -284,10 +284,11 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = [
             "notification_id",
+            "notification_appointment",
             "user_id",
             "payload_data",
-            "is_confirmed",
         ]
+
 
 
 class NotificationViewSerializer(serializers.ModelSerializer):
@@ -299,7 +300,7 @@ class NotificationViewSerializer(serializers.ModelSerializer):
              "notification_id",
             "user_id",
             "payload_data",
-            "is_confirmed",
+            "notification_appointment"
         ]
         depth = 1
 
