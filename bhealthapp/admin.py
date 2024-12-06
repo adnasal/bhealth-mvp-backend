@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from bhealthapp.models import City, User, Service, MedicalRecord, Appointment, Institution, Notification
+from bhealthapp.models import City, User, Service, MedicalRecord, Appointment, Institution, Notification, Country
 
 
 @admin.register(City)
@@ -22,6 +22,24 @@ class CityAdmin(admin.ModelAdmin):
 
 # admin.site.register(City, CityAdmin)
 
+@admin.register(Country)
+class CountryAdmin(admin.ModelAdmin):
+    empty_value_display = '-empty-'
+
+    fieldsets = (
+        (None, {
+            'fields': ['country_name', 'country_code']
+        }),
+    )
+
+    list_display = ['country_name', 'country_code']
+    classes = ['wide', 'extrapretty']
+    list_filter = ['country_code']
+    search_fields = ('country_name__startswith',)
+
+
+
+# admin.site.register(City, CityAdmin)
 
 @admin.register(User)
 class PatientAdmin(admin.ModelAdmin):

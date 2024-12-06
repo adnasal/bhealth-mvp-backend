@@ -3,24 +3,28 @@ from datetime import datetime, date
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.hashers import make_password
-from django.db.models import Q, Avg
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils.http import urlsafe_base64_encode
 from rest_framework import pagination
 from rest_framework import status, filters, serializers, fields
 from rest_framework.authtoken.models import Token
-from rest_framework.generics import (
-    CreateAPIView, GenericAPIView, DestroyAPIView, ListAPIView, get_object_or_404, UpdateAPIView
-)
+from rest_framework.generics import (CreateAPIView, GenericAPIView, DestroyAPIView, ListAPIView, get_object_or_404,
+                                     UpdateAPIView)
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from bhealthapp.models import Institution, InstitutionService, MedicalRecord, Appointment, User, Notification, Service
+from bhealthapp.models import Institution, InstitutionService, MedicalRecord, Appointment, User, Notification, Party, \
+    InstitutionWorkingHours, Drug, Diagnosis, Treatment, Role
 from src.config import common
 from .serializers import InstitutionSerializer, InstitutionServiceViewSerializer, MedicalRecordViewSerializer, \
-    PatientSerializer, PatientViewSerializer, InstitutionViewSerializer, AppointmentViewSerializer, MedicalRecordSerializer, \
-    AppointmentSerializer, NotificationViewSerializer, NotificationSerializer, \
-     RequestViewSerializer
+    PatientSerializer, PatientViewSerializer, InstitutionViewSerializer, AppointmentViewSerializer, \
+    MedicalRecordSerializer, AppointmentSerializer, NotificationViewSerializer, NotificationSerializer, \
+    RequestViewSerializer, PatientLoginSerializer, InstitutionLoginSerializer, PasswordResetRequestSerializer, \
+    PasswordResetSerializer, InstitutionWorkingHoursSerializer, DrugSerializer, DiagnosisSerializer, \
+    TreatmentSerializer, RoleSerializer
 from .tasks import send_appointment_canceled_message, send_appointment_message, download_file, request_updated, \
     upload_pdf, send_request_notification
 
@@ -34,22 +38,12 @@ class CustomPagination(pagination.PageNumberPagination):
 
 
 class ValidateQueryParams(serializers.Serializer):
-    search = fields.RegexField(
-        "^[\u0621-\u064A\u0660-\u0669 a-zA-Z0-9]{3,30}$", required=False
-    )
+    search = fields.RegexField("^[\u0621-\u064A\u0660-\u0669 a-zA-Z0-9]{3,30}$", required=False)
 
-    city = fields.RegexField(
-        "^[\u0621-\u064A\u0660-\u0669 a-zA-Z]{3,30}$", required=False
-    )
-    institution = fields.RegexField(
-        "^[\u0621-\u064A\u0660-\u0669 a-zA-Z]{3,30}$", required=False
-    )
-    service = fields.RegexField(
-        "^[\u0621-\u064A\u0660-\u0669 a-zA-Z]{3,30}$", required=False
-    )
-    patient = fields.RegexField(
-        "^[\u0621-\u064A\u0660-\u0669 a-zA-Z0-9]{3,30}$", required=False
-    )
+    city = fields.RegexField("^[\u0621-\u064A\u0660-\u0669 a-zA-Z]{3,30}$", required=False)
+    institution = fields.RegexField("^[\u0621-\u064A\u0660-\u0669 a-zA-Z]{3,30}$", required=False)
+    service = fields.RegexField("^[\u0621-\u064A\u0660-\u0669 a-zA-Z]{3,30}$", required=False)
+    patient = fields.RegexField("^[\u0621-\u064A\u0660-\u0669 a-zA-Z0-9]{3,30}$", required=False)
     pk = fields.RegexField("^[\u0621-\u064A\u0660-\u0669 0-9]{3,30}$", required=False)
     day = fields.IntegerField(min_value=1, max_value=30, required=False)
     year = fields.IntegerField(min_value=1990, max_value=today.year, required=False)
@@ -80,6 +74,7 @@ class UserCreate(GenericAPIView):
 
 class UserLogin(GenericAPIView):
     permission_classes = [AllowAny]
+    serializer_class = PatientLoginSerializer
 
     def post(self, request):
         try:
@@ -93,28 +88,42 @@ class UserLogin(GenericAPIView):
             try:
                 user = User.objects.get(email=email)
                 user_id = user.pk
-                user_type = 'Patient'
             except User.DoesNotExist:
-                try:
-                    institution = Institution.objects.get(email=email)
-                    user_id = institution.pk
-                    user_type = 'Institution'
-                    user = institution
-                except Institution.DoesNotExist:
-                    return Response({'Error': 'Invalid email or password.'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'Error': 'Invalid email or password.'}, status=status.HTTP_401_UNAUTHORIZED)
 
-            if user_type is 'Patient':
-                if user.is_blocked:
-                    return Response({'Error': 'Your account has been blocked.'}, status=status.HTTP_401_UNAUTHORIZED)
+            # if user.is_blocked:
+            # return Response({'Error': 'Your account has been blocked.'}, status=status.HTTP_401_UNAUTHORIZED)
 
             refresh = RefreshToken.for_user(user)
 
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'User Type': user_type,
-                'User Id': user_id
-            })
+            return Response({'refresh': str(refresh), 'access': str(refresh.access_token), 'User Id': user_id})
+
+        except Exception as e:
+            return Response({'Error': 'An error occurred during login.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class InstitutionLogin(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = InstitutionLoginSerializer
+
+    def post(self, request):
+        try:
+            email = request.data.get('email')
+            password = request.data.get('password')
+
+            if not email or not password:
+                return Response({'Error': 'Please provide both email and password.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                institution = Institution.objects.get(emails=email)
+                institution_id = institution.pk
+            except Institution.DoesNotExist:
+                return Response({'Error': 'Invalid email or password.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+            refresh = RefreshToken.for_user(institution)
+
+            return Response({'refresh': str(refresh), 'access': str(refresh.access_token), 'User Id': institution_id})
 
         except Exception as e:
             return Response({'Error': 'An error occurred during login.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -166,28 +175,27 @@ class AppointmentAddView(CreateAPIView):
 
     def create(self, request, **kwargs):
         try:
-            institution_id = request.data.get('institution_appointment')
-            service_id = request.data.get('service_appointment')
-            patient_id = request.data.get('patient')
-            date = request.data.get('date')
+            institution_service_id = request.data.get('institution_service_id')
+            patient_id = request.data.get('patient_id')
+            doctor_id = request.data.get('doctor_id')
+            datetime = request.data.get('datetime')
 
-            institution = Institution.objects.get(pk=institution_id)
-            service = Service.objects.get(pk=service_id)
+            institution_service = InstitutionService.objects.get(pk=institution_service_id)
             patient = User.objects.get(pk=patient_id)
+            doctor = Party.objects.get(pk=doctor_id)
 
-            appointment = Appointment.objects.create(
-                institution_appointment=institution,
-                service_appointment=service,
-                patient=patient,
-                date=date,
-                status=Appointment.STATUS_PENDING
-            )
+            appointment = Appointment.objects.create(institution_service_id=institution_service, patient_id=patient,
+                doctor_id=doctor, datetime=datetime, status=Appointment.STATUS_PENDING, )
+
             send_request_notification(appointment_id=appointment.id)
 
-            return Response({'Appointment added successfully.'}, status=status.HTTP_201_CREATED)
+            return Response({'message': 'Appointment added successfully.'}, status=status.HTTP_201_CREATED)
 
-        except (Institution.DoesNotExist, Service.DoesNotExist, User.DoesNotExist):
-            return Response({'Failure': 'One or more related objects do not exist.'}, status=status.HTTP_404_NOT_FOUND)
+        except (InstitutionService.DoesNotExist, User.DoesNotExist, Party.DoesNotExist):
+            return Response({'error': 'One or more related objects do not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserUpdateView(GenericAPIView):
@@ -201,8 +209,7 @@ class UserUpdateView(GenericAPIView):
                 return Response('Please add primary key.')
             User.objects.get(pk=param)
         except User.DoesNotExist:
-            return Response({'Failure': 'User does not exist.'},
-                            status=status.HTTP_404_NOT_FOUND)
+            return Response({'Failure': 'User does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = PatientSerializer(instance=get_object_or_404(User, pk=param), data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -262,9 +269,9 @@ class InstitutionUpdateView(GenericAPIView):
 class InstitutionListView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = InstitutionViewSerializer
-    ordering = ['-id']
+    ordering = ['-institution_id']
     pagination_class = CustomPagination
-    search_fields = ['name', 'city', 'address']
+    search_fields = ['institution_name', 'city_id', 'address']
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
 
     def get_queryset(self, *args, **kwargs):
@@ -273,18 +280,18 @@ class InstitutionListView(ListAPIView):
         query_params = ValidateQueryParams(data=param)
         query_params.is_valid(raise_exception=True)
 
-        queryset = Institution.objects.all().order_by('id')
+        queryset = Institution.objects.all().order_by('institution_id')
 
         if param.get('search') is not None:
 
             search = param.get('search')
             query_set = queryset.filter(Q(institution__name__contains=search) | Q(service__name__contains=search))
 
-        elif param.get('city') is not None:
+        elif param.get('city_id') is not None:
             query_set = queryset.filter(city=param.get('city'))
 
-        elif param.get('name') is not None:
-            query_set = queryset.filter(name__contains=param.get('name'))
+        elif param.get('institution_name') is not None:
+            query_set = queryset.filter(name__contains=param.get('institution_name'))
 
         elif param.get('address') is not None:
             query_set = queryset.filter(address__contains=param.get('address'))
@@ -317,7 +324,7 @@ class InstitutionView(GenericAPIView):
 class InstitutionServiceListView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = InstitutionServiceViewSerializer
-    ordering = ['-id']
+    ordering = ['-institution_service_id']
     pagination_class = CustomPagination
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
@@ -325,21 +332,18 @@ class InstitutionServiceListView(ListAPIView):
     def get_queryset(self, *args, **kwargs):
         param = self.request.query_params
 
-        queryset = InstitutionService.objects.all().order_by('id')
+        queryset = InstitutionService.objects.all().order_by('institution_service_id')
 
         if param.get('search') is not None:
 
             search = param.get('search')
             query_set = queryset.filter(Q(institution__name__contains=search) | Q(service__name__contains=search))
 
-        elif param.get('city') is not None:
-            query_set = queryset.filter(institution_service__city=param.get('city'))
+        elif param.get('institution_id') is not None:
+            query_set = queryset.filter(institution_service__pk=param.get('institution_id'))
 
-        elif param.get('institution') is not None:
-            query_set = queryset.filter(institution_service__pk=param.get('institution'))
-
-        elif param.get('service') is not None:
-            query_set = queryset.filter(institution_service__city__contains=param.get('service'))
+        elif param.get('service_id') is not None:
+            query_set = queryset.filter(institution_service__city__contains=param.get('service_id'))
 
         else:
             query_set = queryset
@@ -405,7 +409,7 @@ class InstitutionRemoveView(DestroyAPIView):
 class MedicalRecordListView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = MedicalRecordViewSerializer
-    ordering = ['-id']
+    ordering = ['-medical_record_id']
     pagination_class = CustomPagination
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
 
@@ -415,12 +419,12 @@ class MedicalRecordListView(ListAPIView):
         if param.get('patient') is not None:
 
             patient = param.get('patient')
-            query_set = MedicalRecord.objects.filter(appointment__patient=patient)
+            query_set = MedicalRecord.objects.filter(user_id=patient)
 
         elif param.get('appointment') is not None:
 
             appointment = param.get('appointment')
-            query_set = MedicalRecord.objects.filter(appointment=appointment)
+            query_set = MedicalRecord.objects.filter(appointment_id=appointment)
 
         else:
             query_set = MedicalRecord.objects.none()
@@ -469,7 +473,7 @@ class AppointmentView(GenericAPIView):
 class UpcomingAppointmentsUserView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = AppointmentViewSerializer
-    ordering = ['-id']
+    ordering = ['-appointment_id']
     pagination_class = CustomPagination
     search_fields = ['patient']
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
@@ -482,7 +486,7 @@ class UpcomingAppointmentsUserView(ListAPIView):
             patient = User.objects.get(pk=param)
             date_from = today
             date_to = today + relativedelta(years=5)
-            query_set = Appointment.objects.filter(patient=patient, date__gte=date_from, date__lte=date_to,
+            query_set = Appointment.objects.filter(patient_id=patient, datetime__gte=date_from, datetime__lte=date_to,
                                                    status=1)
 
         else:
@@ -494,7 +498,7 @@ class UpcomingAppointmentsUserView(ListAPIView):
 class PastAppointmentsUserView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = AppointmentViewSerializer
-    ordering = ['-id']
+    ordering = ['-appointment_id']
     pagination_class = CustomPagination
     search_fields = ['patient']
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
@@ -506,7 +510,7 @@ class PastAppointmentsUserView(ListAPIView):
             patient = User.objects.get(pk=patient_id)
             date_from = today - relativedelta(years=5)
             date_to = today
-            query_set = Appointment.objects.filter(patient=patient, date__gte=date_from, date__lte=date_to,
+            query_set = Appointment.objects.filter(patient_id=patient, datetime__gte=date_from, datetime__lte=date_to,
                                                    status=1)
 
             return query_set
@@ -520,7 +524,7 @@ class UpcomingAppointmentsInstitutionView(ListAPIView):
     pagination_class = CustomPagination
     search_fields = ['patient']
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    ordering_fields = ['-date']
+    ordering_fields = ['-datetime']
 
     def get_queryset(self):
         institution_id = self.request.query_params.get('institution', default=None)
@@ -529,12 +533,8 @@ class UpcomingAppointmentsInstitutionView(ListAPIView):
             institution = Institution.objects.get(pk=institution_id)
             today = date.today()
             future_date = today + relativedelta(years=5)
-            queryset = Appointment.objects.filter(
-                institution_appointment=institution,
-                date__gte=today,
-                date__lte=future_date,
-                status=Appointment.STATUS_CONFIRMED
-            ).order_by('-date')
+            queryset = Appointment.objects.filter(institution_service_id=institution, datetime__gte=today,
+                datetime__lte=future_date, status=Appointment.STATUS_CONFIRMED).order_by('-date')
 
             return queryset
 
@@ -547,7 +547,7 @@ class PastAppointmentsInstitutionView(ListAPIView):
     pagination_class = CustomPagination
     search_fields = ['patient']
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    ordering_fields = ['-date']
+    ordering_fields = ['-datetime']
 
     def get_queryset(self, *args, **kwargs):
         institution_id = self.request.query_params.get('institution', default=None)
@@ -556,12 +556,8 @@ class PastAppointmentsInstitutionView(ListAPIView):
             institution = Institution.objects.get(pk=institution_id)
             today = datetime.now().date()
             past_date = today - relativedelta(years=5)
-            query_set = Appointment.objects.filter(
-                institution_appointment=institution,
-                date__gte=past_date,
-                date__lte=today,
-                status=Appointment.STATUS_CONFIRMED
-            ).order_by('-date')
+            query_set = Appointment.objects.filter(institution_service_id=institution, datetime__gte=past_date,
+                datetime__lte=today, status=Appointment.STATUS_CONFIRMED).order_by('-date')
 
             return query_set
 
@@ -571,7 +567,7 @@ class PastAppointmentsInstitutionView(ListAPIView):
 class RequestsView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = RequestViewSerializer
-    ordering = ['-id']
+    ordering = ['-appointment_id']
     pagination_class = CustomPagination
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
 
@@ -581,10 +577,10 @@ class RequestsView(ListAPIView):
         query_params = ValidateQueryParams(data=param)
         query_params.is_valid(raise_exception=True)
 
-        if param.get('institution_appointment') is not None:
-            institution = param.get('institution_appointment')
+        if param.get('institution_service_id') is not None:
+            institution = param.get('institution_service_id')
 
-            query_set = Appointment.objects.filter(institution_appointment=institution, status=0)
+            query_set = Appointment.objects.filter(institution_service_id=institution, status=0)
 
             return query_set
 
@@ -594,7 +590,7 @@ class RequestsView(ListAPIView):
 class PatientsView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = PatientViewSerializer
-    ordering = ['-id']
+    ordering = ['-user_id']
     pagination_class = CustomPagination
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
 
@@ -603,7 +599,7 @@ class PatientsView(ListAPIView):
 
         if param is not None:
             institution = Institution.objects.get(pk=param)
-            appointments = Appointment.objects.filter(institution_appointment=institution)
+            appointments = Appointment.objects.filter(institution_service_id=institution)
             query_set = User.objects.filter(patient__in=appointments)
 
             return query_set
@@ -618,8 +614,51 @@ class WeRecommendView(ListAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
 
     def get_queryset(self):
-        institutions = Institution.objects.order_by('-average_rating')[:6]
+        institutions = Institution.objects.order_by('rating')[:6]
         return institutions
+
+class DrugListView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = DrugSerializer
+    pagination_class = CustomPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    def get_queryset(self):
+        drugs = Drug.objects.order_by('drug_name')
+        return drugs
+
+
+class DiagnosisListView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = DiagnosisSerializer
+    pagination_class = CustomPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    def get_queryset(self):
+        diagnosis = Diagnosis.objects.order_by('diagnosis_name')
+        return diagnosis
+
+
+class TreatmentListView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = TreatmentSerializer
+    pagination_class = CustomPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    def get_queryset(self):
+        treatments = Treatment.objects.order_by('drug_id')
+        return treatments
+
+
+class RoleListView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = RoleSerializer
+    pagination_class = CustomPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    def get_queryset(self):
+        roles = Role.objects.order_by('role_name')
+        return roles
 
 
 class ProfileView(GenericAPIView):
@@ -639,6 +678,7 @@ class ProfileView(GenericAPIView):
         data = serializer.data
 
         return Response(data, status=status.HTTP_200_OK, content_type="application/json")
+
 
 '''
 class RatingAddView(CreateAPIView):
@@ -670,6 +710,7 @@ class RatingAddView(CreateAPIView):
             return Response({'Failure': 'Institution you are trying to rate does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 '''
 
+
 class MedicalRecordAddView(CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = MedicalRecordSerializer
@@ -687,8 +728,8 @@ class MedicalRecordAddView(CreateAPIView):
             serializer.save()
 
             medical_record = MedicalRecord.objects.last()
-            medical_record.appointment = app
-            medical_record.save(update_fields=['appointment'])
+            medical_record.appointment_id = app
+            medical_record.save(update_fields=['appointment_id'])
 
         except Appointment.DoesNotExist:
             return Response({'Failure': 'Appointment you are trying to add medical_record for does not exist.'},
@@ -709,12 +750,12 @@ class AppointmentUpdateView(GenericAPIView):
                 return Response('Please add primary key.')
             appointment = Appointment.objects.get(pk=param)
         except Appointment.DoesNotExist:
-            return Response({'Failure': 'Appointment does not exist.'},
-                            status.HTTP_404_NOT_FOUND)
+            return Response({'Failure': 'Appointment does not exist.'}, status.HTTP_404_NOT_FOUND)
 
         if 'status' in request.data and request.data['status'] == 1 and appointment.date is not None:
-            return Response({'Failure': 'You cannot confirm an appointment that has not been confirmed by institution.'},
-                            status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'Failure': 'You cannot confirm an appointment that has not been confirmed by institution.'},
+                status.HTTP_400_BAD_REQUEST)
         else:
             serializer = AppointmentSerializer(instance=appointment, data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -782,8 +823,69 @@ class CanceledAppointmentsView(ListAPIView):
     pagination_class = CustomPagination
     search_fields = ['patient']
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    ordering_fields = ['-date']
+    ordering_fields = ['-datetime']
 
     def get_queryset(self, *args, **kwargs):
-        query_set = Appointment.objects.filter(status=Appointment.STATUS_CANCELED).order_by('-date')
+        query_set = Appointment.objects.filter(status=Appointment.STATUS_CANCELED).order_by('-datetime')
         return query_set
+
+
+class InstitutionWorkingHoursListView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = InstitutionWorkingHoursSerializer
+    ordering = ['-institution_working_hour_id']
+    pagination_class = CustomPagination
+    search_fields = ['institution_id', 'day_of_week']
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+
+    def get_queryset(self, *args, **kwargs):
+        param = self.request.query_params
+
+        queryset = InstitutionWorkingHours.objects.all().order_by('institution_working_hour_id')
+
+        if param.get('institution_id') is not None:
+            queryset = queryset.filter(institution_id=param.get('institution_id'))
+
+        elif param.get('day_of_week') is not None:
+            day_of_week = int(param.get('day_of_week'))
+            queryset = queryset.filter(day_of_week=day_of_week)
+
+        return queryset
+
+
+class PasswordResetView(GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        serializer = PasswordResetSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"detail": "Password has been reset successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PasswordResetRequestView(GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return Response({"detail": "No user found with this email address."}, status=status.HTTP_404_NOT_FOUND)
+
+            token_generator = PasswordResetTokenGenerator()
+            token = token_generator.make_token(user)
+            uidb64 = urlsafe_base64_encode(str(user.pk).encode()).decode()
+
+            reset_link = f"http://localhost:8000/reset-password/{uidb64}-{token}/"
+
+            # send_mail(
+            #   'Password Reset',
+            #    f'Click the link to reset your password: {reset_link}',
+            #   'from@example.com',  # Replace with your email address
+            #    [email],
+            # )
+            return Response({"detail": "Password reset email sent."}, status=status.HTTP_200_OK)
+
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return "OK"

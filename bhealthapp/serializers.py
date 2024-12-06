@@ -1,8 +1,11 @@
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 from bhealthapp.models import Appointment, Institution, User, City, Service, MedicalRecord, InstitutionService, \
-    Notification, Country
+    Notification, Country, Drug, Diagnosis, Treatment, Role
 
 
 class ChoiceField(serializers.ChoiceField):
@@ -53,6 +56,25 @@ class CityViewSerializer(serializers.ModelSerializer):
         ]
         depth = 1
 
+from rest_framework import serializers
+from bhealthapp.models import InstitutionWorkingHours, Institution
+
+class InstitutionWorkingHoursSerializer(serializers.ModelSerializer):
+    institution_id = serializers.PrimaryKeyRelatedField(queryset=Institution.objects.all())
+
+    class Meta:
+        model = InstitutionWorkingHours
+        fields = [
+            'institution_working_hour_id',
+            'institution_id',
+            'day_of_week',
+            'open_time',
+            'close_time',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['institution_working_hour_id', 'created_at', 'updated_at']
+
 
 class PatientLoginSerializer(serializers.ModelSerializer):
     password = serializers.CharField(min_length=8)
@@ -64,9 +86,71 @@ class PatientLoginSerializer(serializers.ModelSerializer):
             "password",
         ]
 
+class InstitutionLoginSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(min_length=8)
+
+    class Meta:
+        model = Institution
+        fields = [
+            "emails",
+            "password",
+        ]
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("No user found with this email address.")
+        return value
+
+class PasswordResetSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    new_password = serializers.CharField(
+        min_length=8,
+        write_only=True,
+        style={'input_type': 'password'},
+        validators=[validate_password]
+    )
+    confirm_password = serializers.CharField(
+        min_length=8,
+        write_only=True,
+        style={'input_type': 'password'}
+    )
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError("Password fields didn't match.")
+        return data
+
+    def save(self):
+        token = self.validated_data['token']
+        new_password = self.validated_data['new_password']
+
+        try:
+            user = self.verify_reset_token(token)
+            user.set_password(new_password)
+            user.save()
+            return user
+        except Exception as e:
+            raise serializers.ValidationError(f"Token validation failed: {str(e)}")
+
+    def verify_reset_token(self, token):
+        try:
+            uidb64, token = token.split('-')
+            uid = urlsafe_base64_decode(uidb64).decode()
+
+            user = User.objects.get(pk=uid)
+
+            token_generator = PasswordResetTokenGenerator()
+            if not token_generator.check_token(user, token):
+                raise serializers.ValidationError("Invalid or expired token.")
+
+            return user
+        except (ValueError, User.DoesNotExist):
+            raise serializers.ValidationError("Invalid token.")
 
 class PatientSerializer(serializers.ModelSerializer):
-    city = serializers.StringRelatedField()
     email = serializers.EmailField(
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())]
@@ -97,7 +181,6 @@ class PatientViewSerializer(serializers.ModelSerializer):
             "phone_number",
             "email",
             "dob",
-            "is_blocked",
             "is_email_verified",
             "gender",
         ]
@@ -105,8 +188,8 @@ class PatientViewSerializer(serializers.ModelSerializer):
 
 
 class InstitutionSerializer(serializers.ModelSerializer):
-    city = serializers.StringRelatedField()
-    email = serializers.EmailField(
+    city_id = serializers.StringRelatedField()
+    emails = serializers.EmailField(
         required=True,
         validators=[UniqueValidator(queryset=Institution.objects.all())]
     )
@@ -195,7 +278,7 @@ class ServiceViewSerializer(serializers.ModelSerializer):
         depth = 1
 
 
-'''
+
 class AppointmentPatientSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField()
 
@@ -206,12 +289,12 @@ class AppointmentPatientSerializer(serializers.ModelSerializer):
             'profile_picture'
         ]
 
-'''
+
 
 class AppointmentSerializer(serializers.ModelSerializer):
     institution_appointment = serializers.StringRelatedField()
     service_appointment = serializers.SerializerMethodField()
-   # patient = AppointmentPatientSerializer(read_only=True)
+    patient = AppointmentPatientSerializer(read_only=True)
 
     class Meta:
         model = Appointment
@@ -219,14 +302,53 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "institution_appointment",
             "service_appointment",
             "patient",
-            "date",
+            "datetime",
             "status",
-            "fee",
-            "doctor"
+            "doctor_id"
         ]
 
     def get_service_appointment(self, obj):
         return obj.service_appointment.name
+
+
+class DrugSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Drug
+        fields = [
+            "drug_name",
+            "drug_code",
+            "vendor",
+            "drug_type",
+            "dosage",
+            "is_prescription_required",
+            "side_effects"
+        ]
+
+class DiagnosisSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Diagnosis
+        fields = [
+            "diagnosis_name",
+            "diagnosis_code",
+            "diagnosis_type",
+        ]
+
+class TreatmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Treatment
+        fields = [
+            "party_diagnosis_id",
+            "drug_id",
+            "description",
+        ]
+
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = [
+            "role_name",
+            "description",
+        ]
 
 
 class AppointmentViewSerializer(serializers.ModelSerializer):
@@ -239,9 +361,10 @@ class AppointmentViewSerializer(serializers.ModelSerializer):
             "institution_service_id",
             "datetime",
             "patient_id",
-            "appointment_status",
+            "status",
             "description",
-            "is_completed"
+            "is_completed",
+            "institution_appointment"
         ]
         depth = 1
 
