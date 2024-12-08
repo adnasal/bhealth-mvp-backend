@@ -331,8 +331,7 @@ class InstitutionWorkingHours(models.Model):
 
 
 class UserSetting(models.Model):
-    user_id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_settings')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, default=1) # TBD
     notifications = models.JSONField(null=True, blank=True)
     additional_data = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)

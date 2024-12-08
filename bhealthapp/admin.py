@@ -64,11 +64,11 @@ class PatientAdmin(admin.ModelAdmin):
 class InstitutionAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ['city_id', 'institution_name', 'password', 'address', 'phone_numbers', 'emails', 'website', 'rating']
+            'fields': ['city_id', 'institution_name', 'password', 'address', 'phone_number', 'email', 'website', 'rating']
         }),
     )
 
-    list_display = ['city_id', 'institution_name', 'password', 'address', 'phone_numbers', 'emails', 'website']
+    list_display = ['city_id', 'institution_name', 'password', 'address', 'phone_number', 'email', 'website']
 
     empty_value_display = '-empty-'
     list_filter = ['institution_name', 'city_id', 'rating']
