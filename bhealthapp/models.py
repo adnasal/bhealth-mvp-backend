@@ -67,7 +67,8 @@ class User(AbstractUser):
     GENDER_CHOICES = ((GENDER_MALE, 'Male'), (GENDER_FEMALE, 'Female'),)
     USER_STATUS_ACTIVE = 'active'
     USER_STATUS_INACTIVE = 'inactive'
-    USER_STATUS_CHOICES = ((USER_STATUS_ACTIVE, 'Active'), (USER_STATUS_INACTIVE, 'Inactive'),)
+    USER_STATUS_BLOCKED = 'blocked'
+    USER_STATUS_CHOICES = ((USER_STATUS_ACTIVE, 'Active'), (USER_STATUS_INACTIVE, 'Inactive'), (USER_STATUS_BLOCKED, 'Blocked'))
     user_id = models.BigAutoField(primary_key=True, default=1)
     username = models.TextField(max_length=150, null=True, blank=True, unique=True)
     password = models.TextField(max_length=255)
@@ -80,8 +81,6 @@ class User(AbstractUser):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     party_id = models.ForeignKey('Party', related_name='user_party', on_delete=models.DO_NOTHING, null=True)
-    # city = models.ForeignKey(City, related_name='user_city', on_delete=models.DO_NOTHING, default=1)
-    # is_blocked = models.BooleanField(default=False)
     is_email_verified = models.BooleanField(default=False)
     is_phone_number_verified = models.BooleanField(default=False)
     gender = models.PositiveSmallIntegerField(choices=GENDER_CHOICES, default=GENDER_FEMALE, )
@@ -107,13 +106,12 @@ class Institution(models.Model):
     address = models.TextField(null=False, max_length=350, default=None)
     latitude = models.DecimalField(null=False, max_digits=7, decimal_places=2, default=None)
     longitude = models.DecimalField(null=False, max_digits=7, decimal_places=2, default=None)
-    phone_numbers = models.TextField(null=False, blank=False)
-    emails = models.TextField(null=False, max_length=255)
+    phone_number = models.TextField(null=False, blank=False)
+    email = models.TextField(null=False, max_length=255)
     description = models.TextField(null=False, default='Default description')
     website = models.TextField(max_length=255, blank=True, null=True, default='bhealth.ba')
-    # subsidiary_id = models.ForeignKey(Country, related_name='cities', on_delete=models.DO_NOTHING)
-    # working_days = models.TextField(null=True, max_length=255, default='All working days')
-    # profile_picture = models.ImageField(default='default.jpg', upload_to='profile_pics', null=True)
+    subsidiary = models.ForeignKey('self', related_name='subsidiaries', on_delete=models.DO_NOTHING, null=True, blank=True)
+    logo = models.ImageField(default='default.jpg', upload_to='profile_pics', null=True)
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
     founded = models.DateField(null=True)
     created_at = models.DateTimeField(default=timezone.now)
@@ -123,6 +121,7 @@ class Institution(models.Model):
     institution_status = models.CharField(max_length=20, choices=INSTITUTION_STATUS_CHOICES,
         default=INSTITUTION_STATUS_ACTIVE, )
 
+    '''
     def get_phone_numbers(self):
         if self.phone_numbers:
             return self.phone_numbers.split(',')
@@ -140,6 +139,7 @@ class Institution(models.Model):
     def set_emails(self, emails):
         self.emails = ','.join(emails)
         self.save()
+    '''
 
     def __str__(self):
         return self.institution_name
@@ -177,7 +177,7 @@ class Party(models.Model):
     gender = models.PositiveSmallIntegerField(choices=GENDER_CHOICES, default=GENDER_FEMALE, )
     birth_date = models.DateField(null=True)
     address = models.TextField(null=False, max_length=350, default=None)
-    ssn = models.TextField(max_length=255, default=None)
+    ssn = models.TextField(max_length=255, default=None) # to be checked
     descended_at = models.DateTimeField(auto_now=True)
     is_doctor = models.BooleanField(default=False)
     description = models.TextField(null=False, default='Default description')
@@ -190,7 +190,7 @@ class NotificationHistory(models.Model):
     notification_id = models.BigAutoField(primary_key=True, default=0)
     event_name = models.TextField(null=False, default=None)
     user_id = models.ForeignKey(User, related_name='notification_history_user', on_delete=models.DO_NOTHING, default=1)
-    payload_data = models.JSONField(null=True, blank=True)
+    payload_data = models.JSONField(null=True, blank=True) # message
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -262,15 +262,13 @@ class InstitutionService(models.Model):
 
 class Appointment(models.Model):
     appointment_id = models.BigAutoField(primary_key=True)
-    institution_service_id = models.ForeignKey(InstitutionService, related_name='institution_service_name',
-                                               on_delete=models.DO_NOTHING, null=True, default=1)
-    patient_id = models.ForeignKey(User, related_name='appointment_patient', on_delete=models.DO_NOTHING, blank=True,
-                                   null=True)
-    patient_user_id = models.ForeignKey(InstitutionUser, related_name='institution_user', on_delete=models.DO_NOTHING,
+    institution_service_id = models.ForeignKey(InstitutionService, related_name='appointment_institution_service', on_delete=models.DO_NOTHING, blank=True, null=True)
+    patient_id = models.ForeignKey(Party, related_name='appointment_patient_party', on_delete=models.DO_NOTHING, blank=True, null=True)
+    patient_user_id = models.ForeignKey(User, related_name='appointment_patient', on_delete=models.DO_NOTHING,
                                         blank=True, null=True)
-    doctor_id = models.ForeignKey(Party, related_name='appointment_doctor', on_delete=models.DO_NOTHING, blank=True,
+    doctor_id = models.ForeignKey(Party, related_name='appointment_doctor_party', on_delete=models.DO_NOTHING, blank=True,
                                   null=True)
-    doctor_user_id = models.ForeignKey(InstitutionParty, related_name='appointment_doctor', on_delete=models.DO_NOTHING,
+    doctor_user_id = models.ForeignKey(User, related_name='appointment_doctor', on_delete=models.DO_NOTHING,
                                        blank=True, null=True)
     datetime = models.DateTimeField(null=True, blank=True)
     description = models.TextField(null=False, default='Default description')
@@ -293,7 +291,7 @@ class MedicalRecord(models.Model):
     appointment_id = models.ForeignKey(Appointment, related_name='appointment_result', on_delete=models.DO_NOTHING)
     user_id = models.ForeignKey(User, related_name='patient_medical_record', on_delete=models.DO_NOTHING, default=1)
     file = models.TextField(default='File')
-    message_content = models.TextField(default='Message')
+    notes = models.TextField(default='Message')
     downloads = models.IntegerField(default=0)
     reference_values = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
@@ -303,20 +301,29 @@ class MedicalRecord(models.Model):
 
 
 class Notification(models.Model):
-    # TBD name
     notification_id = models.BigAutoField(primary_key=True, default=0)
     user_id = models.ForeignKey(User, related_name='notification_user', on_delete=models.DO_NOTHING, default=1)
     event_name = models.TextField(default='Event')
-    payload_data = models.JSONField(null=True, blank=True)
+    payload_data = models.JSONField(null=True, blank=True) # message
     created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)  # is_confirmed = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class InstitutionWorkingHours(models.Model):
     institution_working_hour_id = models.BigAutoField(primary_key=True)
     institution_id = models.ForeignKey(Institution, related_name='institution_working_hours',
                                        on_delete=models.DO_NOTHING)
-    day_of_week = models.TextField(null=False, default=None)
+
+    DAY_1 = 1
+    DAY_2 = 2
+    DAY_3 = 3
+    DAY_4 = 4
+    DAY_5 = 5
+    DAY_6 = 6
+    DAY_7 = 7
+
+    DAYS_CHOICES = ((DAY_1, 'Monday'), (DAY_2, 'Tuesday'), (DAY_3, 'Wednesday'), (DAY_4, 'Thursday'), (DAY_5, 'Friday'), (DAY_6, 'Saturday'), (DAY_7, 'Sunday'))
+    day_of_week = models.PositiveSmallIntegerField(choices=DAYS_CHOICES, default=DAY_1, )
     open_time = models.TimeField(null=False, default=None)
     close_time = models.TimeField(null=False, default=None)
     created_at = models.DateTimeField(default=timezone.now)
@@ -324,9 +331,9 @@ class InstitutionWorkingHours(models.Model):
 
 
 class UserSetting(models.Model):
-    # user_setting_id = models.BigAutoField(primary_key=True)
-    user_id = models.ForeignKey(User, related_name='user_setting', on_delete=models.DO_NOTHING, default=1)
-    # notifications = models.JSONField(null=True, blank=True)
+    user_id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_settings')
+    notifications = models.JSONField(null=True, blank=True)
     additional_data = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
@@ -337,7 +344,7 @@ class Drug(models.Model):
     drug_name = models.TextField(null=False, default=None)
     drug_code = models.TextField(null=False, default=None)
     vendor = models.TextField(null=False, default=None)
-    drug_type = models.DateTimeField(auto_now_add=True)
+    drug_type = models.TextField(null=False, default=None)
     dosage = models.TextField(null=False, default=None)
     description = models.TextField(null=False, default=None)
     is_prescription_required = models.BooleanField(default=False)
@@ -348,9 +355,10 @@ class Drug(models.Model):
 
 class Diagnosis(models.Model):
     diagnosis_id = models.BigAutoField(primary_key=True)
+    #parent_diagnosis_id = models.ForeignKey(Diagnosis, on_delete=models.DO_NOTHING, null=False, blank=False)
     diagnosis_name = models.TextField(null=False, default=None)
     diagnosis_code = models.TextField(null=False, default=None)
-    diagnosis_type = models.TextField(null=False, default=None)
+    diagnosis_type = models.TextField(null=False, default=None) # will be types
     description = models.TextField(null=False, default=None)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
