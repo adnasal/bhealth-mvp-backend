@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 from bhealthapp.models import Appointment, Institution, User, City, Service, MedicalRecord, InstitutionService, \
-    Notification, Country, Drug, Diagnosis, Treatment, Role
+    Notification, Country, Drug, Diagnosis, Treatment, Role, Institution, InstitutionWorkingHours
 
 
 class ChoiceField(serializers.ChoiceField):
@@ -34,6 +34,14 @@ class CountrySerializer(serializers.ModelSerializer):
         ]
 
 
+class CountryViewSerializer(serializers.Serializer):
+    country_id = serializers.IntegerField()
+    country_name = serializers.CharField()
+    country_code = serializers.CharField()
+    is_eu = serializers.BooleanField()
+    phone_code = serializers.CharField()
+
+
 class CitySerializer(serializers.ModelSerializer):
     country = CountrySerializer()
 
@@ -45,35 +53,42 @@ class CitySerializer(serializers.ModelSerializer):
         ]
 
 
-class CityViewSerializer(serializers.ModelSerializer):
-    country = CountrySerializer()
+class CityViewSerializer(serializers.Serializer):
+    city_id = serializers.IntegerField()
+    city_name = serializers.CharField()
+    country_id = serializers.IntegerField()
+    country_name = serializers.CharField()
+    country_code = serializers.CharField()
+    is_eu = serializers.BooleanField()
+    phone_code = serializers.CharField()
 
-    class Meta:
-        model = City
-        fields = [
-            "city_name",
-             "country"
-        ]
-        depth = 1
 
-from rest_framework import serializers
-from bhealthapp.models import InstitutionWorkingHours, Institution
+class SaveMedicalRecordTemplateSerializer(serializers.Serializer):
+    medical_record_template_id = serializers.IntegerField()
+    institution_id = serializers.IntegerField(required=False)
+    template = serializers.JSONField(required=False)
+    is_active = serializers.BooleanField(default=True)
 
-class InstitutionWorkingHoursSerializer(serializers.ModelSerializer):
-    institution_id = serializers.PrimaryKeyRelatedField(queryset=Institution.objects.all())
 
-    class Meta:
-        model = InstitutionWorkingHours
-        fields = [
-            'institution_working_hour_id',
-            'institution_id',
-            'day_of_week',
-            'open_time',
-            'close_time',
-            'created_at',
-            'updated_at',
-        ]
-        read_only_fields = ['institution_working_hour_id', 'created_at', 'updated_at']
+class MedicalRecordTemplateViewSerializer(serializers.Serializer):
+    medical_record_template_id = serializers.IntegerField()
+    institution_id = serializers.IntegerField()
+    template = serializers.JSONField()
+    is_active = serializers.BooleanField()
+
+
+class SaveInstitutionWorkingHoursSerializer(serializers.Serializer):
+    institution_id = serializers.IntegerField()
+    day_of_week = serializers.CharField()
+    open_time = serializers.TimeField()
+    close_time = serializers.TimeField()
+
+
+class InstitutionWorkingHoursSerializer(serializers.Serializer):
+    institution_working_hour_id = serializers.IntegerField()
+    day_of_week = serializers.CharField()
+    open_time = serializers.TimeField()
+    close_time = serializers.TimeField()
 
 
 class PatientLoginSerializer(serializers.ModelSerializer):
@@ -171,21 +186,20 @@ class PatientSerializer(serializers.ModelSerializer):
 
 
 class PatientViewSerializer(serializers.ModelSerializer):
-    gender = ChoiceField(choices=User.GENDER_CHOICES)
+        user_id = serializers.IntegerField()
+        party_id = serializers.IntegerField()
+        email = serializers.EmailField()
+        username = serializers.CharField(max_length=255)
+        phone_number = serializers.CharField(max_length=255)
+        is_email_verified = serializers.BooleanField()
+        is_phone_number_verified = serializers.BooleanField()
+        status = serializers.CharField(max_length=50)
+        registration_date = serializers.DateTimeField()
 
-    class Meta:
-        model = User
-        fields = [
-            "username",
-            "password",
-            "phone_number",
-            "email",
-            "dob",
-            "is_email_verified",
-            "gender",
-        ]
-        depth = 1
-
+class UserSettingsViewSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    notifications = serializers.JSONField()
+    additional_data = serializers.JSONField()
 
 class InstitutionSerializer(serializers.ModelSerializer):
     city_id = serializers.StringRelatedField()
@@ -211,23 +225,34 @@ class InstitutionSerializer(serializers.ModelSerializer):
         ]
 
 
-class InstitutionViewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Institution
-        fields = [
-            "pk",
-            "city_id",
-            "institution_name",
-            "password",
-            "address",
-            "phone_numbers",
-            "emails",
-            "description",
-            "website",
-            "rating",
-            "description"
-        ]
-        depth = 1
+class InstitutionUserViewSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    party_id = serializers.IntegerField()
+    email = serializers.EmailField()
+    username = serializers.CharField()
+    phone_number = serializers.CharField()
+    is_email_verified = serializers.BooleanField()
+    is_phone_number_verified = serializers.BooleanField()
+    status = serializers.CharField()
+    registration_date = serializers.DateTimeField()
+
+class InstitutionViewSerializer(serializers.Serializer):
+    institution_id = serializers.IntegerField()
+    institution_name = serializers.CharField()
+    city_id = serializers.IntegerField()
+    phone_number = serializers.CharField()
+    address = serializers.CharField()
+    website = serializers.URLField()
+    email = serializers.EmailField()
+    latitude = serializers.DecimalField(max_digits=10, decimal_places=6)
+    longitude = serializers.DecimalField(max_digits=10, decimal_places=6)
+    founded = serializers.DateTimeField()
+    rating = serializers.FloatField()
+    status = serializers.CharField()
+    subsidiary_id = serializers.IntegerField()
+    subsidiary_name = serializers.CharField()
+    is_office = serializers.BooleanField()
+    registration_date = serializers.DateTimeField()
 
 
 class InstitutionServiceSerializer(serializers.ModelSerializer):
@@ -241,16 +266,11 @@ class InstitutionServiceSerializer(serializers.ModelSerializer):
         ]
 
 
-class InstitutionServiceViewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InstitutionService
-        fields = [
-            "institution_id",
-            "service_id",
-            "description",
-            "price"
-        ]
-        depth = 1
+class ServiceViewSerializer(serializers.Serializer):
+    service_id = serializers.IntegerField()
+    service_name = serializers.CharField()
+    service_category = serializers.CharField()
+    description = serializers.CharField()
 
 
 
@@ -277,7 +297,33 @@ class ServiceViewSerializer(serializers.ModelSerializer):
         ]
         depth = 1
 
+class SaveServiceSerializer(serializers.Serializer):
+    service_id = serializers.IntegerField()
+    service_name = serializers.CharField(required=False, allow_null=True)
+    service_category = serializers.CharField(required=False, allow_null=True)
+    description = serializers.CharField(required=False, allow_null=True)
 
+
+class InstitutionServiceViewSerializer(serializers.Serializer):
+    institution_service = serializers.IntegerField()
+    institution_id = serializers.IntegerField()
+    service_id = serializers.IntegerField()
+    service_name = serializers.CharField()
+    service_category = serializers.CharField()
+    service_description = serializers.CharField()
+    institution_service_description = serializers.CharField()
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    duration = serializers.DurationField()
+    is_active = serializers.BooleanField()
+
+
+class SaveInstitutionServiceSerializer(serializers.Serializer):
+    institution_id = serializers.IntegerField()
+    service_id = serializers.IntegerField()
+    description = serializers.CharField()
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    is_active = serializers.BooleanField()
+    duration = serializers.DurationField()
 
 class AppointmentPatientSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField()
@@ -342,31 +388,65 @@ class TreatmentSerializer(serializers.ModelSerializer):
             "description",
         ]
 
-class RoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Role
-        fields = [
-            "role_name",
-            "description",
-        ]
+class RoleSerializer(serializers.Serializer):
+    role_id = serializers.IntegerField()
+    role_code = serializers.CharField()
+    role_name = serializers.CharField()
+    description = serializers.CharField()
+    is_active = serializers.BooleanField()
+
+class UserRoleViewSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    institution_user_id = serializers.IntegerField()
+    role_id = serializers.IntegerField()
+    role_code = serializers.CharField()
+    role_name = serializers.CharField()
+
+class InstitutionPartyViewSerializer(serializers.Serializer):
+    party_id = serializers.IntegerField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    phone_number = serializers.CharField()
+    email = serializers.EmailField()
+    city_id = serializers.IntegerField()
+    city_name = serializers.CharField()
+    country_id = serializers.IntegerField()
+    country_name = serializers.CharField()
+    country_code = serializers.CharField()
+    gender = serializers.CharField()
+    address = serializers.CharField()
+    descended_at = serializers.DateTimeField()
+    description = serializers.CharField()
+    first_visit_date = serializers.DateTimeField()
+    notes = serializers.CharField()
 
 
-class AppointmentViewSerializer(serializers.ModelSerializer):
-    institution_appointment = InstitutionViewSerializer()
-
-    class Meta:
-        model = Appointment
-        fields = [
-            "doctor_id",
-            "institution_service_id",
-            "datetime",
-            "patient_id",
-            "status",
-            "description",
-            "is_completed",
-            "institution_appointment"
-        ]
-        depth = 1
+class AppointmentViewSerializer(serializers.Serializer):
+    appointment_id = serializers.IntegerField()
+    institution_service_id = serializers.IntegerField()
+    service_id = serializers.IntegerField()
+    service_name = serializers.CharField()
+    service_category = serializers.CharField()
+    fee = serializers.DecimalField(max_digits=10, decimal_places=2)
+    institution_id = serializers.IntegerField()
+    institution_name = serializers.CharField()
+    patient_id = serializers.IntegerField()
+    patient_user_id = serializers.IntegerField()
+    patient_first_name = serializers.CharField()
+    patient_last_name = serializers.CharField()
+    patient_phone_number = serializers.CharField()
+    patient_email = serializers.EmailField()
+    doctor_id = serializers.IntegerField()
+    doctor_user_id = serializers.IntegerField()
+    doctor_first_name = serializers.CharField()
+    doctor_last_name = serializers.CharField()
+    doctor_phone_number = serializers.CharField()
+    doctor_email = serializers.EmailField()
+    date_time = serializers.DateTimeField()
+    description = serializers.CharField()
+    status = serializers.CharField()
+    is_completed = serializers.BooleanField()
+    scheduled_at = serializers.DateTimeField()
 
 
 
@@ -388,16 +468,31 @@ class MedicalRecordSerializer(serializers.ModelSerializer):
             "file"
         ]
 
+class PartyViewSerializer(serializers.Serializer):
+    party_id = serializers.IntegerField()
+    first_name = serializers.CharField(max_length=255)
+    last_name = serializers.CharField(max_length=255)
+    phone_number = serializers.CharField(max_length=255)
+    email = serializers.EmailField()
+    city_id = serializers.IntegerField()
+    city_name = serializers.CharField(max_length=255)
+    country_id = serializers.IntegerField()
+    country_name = serializers.CharField(max_length=255)
+    country_code = serializers.CharField(max_length=10)
+    gender = serializers.CharField(max_length=10)
+    address = serializers.CharField(max_length=255)
+    descended_at = serializers.DateTimeField()
+    description = serializers.CharField(max_length=500, required=False)
+    first_visit_date = serializers.DateTimeField()
+    notes = serializers.CharField(max_length=500, required=False)
 
-class MedicalRecordViewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MedicalRecord
-        fields = [
-            "appointment_id",
-            "user_id",
-            "file"
-        ]
-        depth = 1
+class MedicalRecordViewSerializer(serializers.Serializer):
+    medical_record_id = serializers.IntegerField()
+    appointment_id = serializers.IntegerField()
+    user_id = serializers.IntegerField()
+    file = serializers.CharField()
+    notes = serializers.CharField()
+    reference_values = serializers.JSONField()
 
 
 class NotificationSerializer(serializers.ModelSerializer):

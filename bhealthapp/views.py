@@ -17,14 +17,14 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from bhealthapp.models import Institution, InstitutionService, MedicalRecord, Appointment, User, Notification, Party, \
-    InstitutionWorkingHours, Drug, Diagnosis, Treatment, Role
+    InstitutionWorkingHours, Drug, Diagnosis, Treatment, Role, City, Country
 from src.config import common
-from .serializers import InstitutionSerializer, InstitutionServiceViewSerializer, MedicalRecordViewSerializer, \
+from .serializers import InstitutionSerializer, InstitutionUserViewSerializer, UserSettingsViewSerializer, PartyViewSerializer, InstitutionPartyViewSerializer, InstitutionServiceViewSerializer, MedicalRecordViewSerializer, MedicalRecordTemplateViewSerializer, \
     PatientSerializer, PatientViewSerializer, InstitutionViewSerializer, AppointmentViewSerializer, \
     MedicalRecordSerializer, AppointmentSerializer, NotificationViewSerializer, NotificationSerializer, \
     RequestViewSerializer, PatientLoginSerializer, InstitutionLoginSerializer, PasswordResetRequestSerializer, \
-    PasswordResetSerializer, InstitutionWorkingHoursSerializer, DrugSerializer, DiagnosisSerializer, \
-    TreatmentSerializer, RoleSerializer
+    PasswordResetSerializer, InstitutionWorkingHoursSerializer, DrugSerializer, UserRoleViewSerializer, DiagnosisSerializer, SaveMedicalRecordTemplateSerializer, \
+    TreatmentSerializer, RoleSerializer, CityViewSerializer, CountryViewSerializer, InstitutionLoginSerializer, ServiceViewSerializer, SaveServiceSerializer, InstitutionServiceViewSerializer, SaveInstitutionServiceSerializer
 from .tasks import send_appointment_canceled_message, send_appointment_message, download_file, request_updated, \
     upload_pdf, send_request_notification
 
@@ -265,42 +265,84 @@ class InstitutionUpdateView(GenericAPIView):
         return Response(data=serializer.validated_data, content_type="application/json",
                         status=status.HTTP_202_ACCEPTED)
 
+class SaveMedicalRecordTemplateView(GenericAPIView):
+    permission_classes = [AllowAny]
 
-class InstitutionListView(ListAPIView):
+    def post(self, request, *args, **kwargs):
+        serializer = SaveMedicalRecordTemplateSerializer(data=request.data)
+        if serializer.is_valid():
+            medical_record_template_id = serializer.validated_data.get('medical_record_template_id')
+            institution_id = serializer.validated_data.get('institution_id')
+            template = serializer.validated_data.get('template')
+            is_active = serializer.validated_data.get('is_active')
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT save_medical_record_template(%s, %s, %s, %s)",
+                    [medical_record_template_id, institution_id, template, is_active]
+                )
+                new_id = cursor.fetchone()[0]
+
+            return Response({"medical_record_template_id": new_id}, status=200)
+
+        return Response(serializer.errors, status=400)
+
+class InstitutionUserListView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = InstitutionUserViewSerializer
+    pagination_class = CustomPagination
+    search_fields = ['email', 'username', 'status']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    ordering_fields = ['registration_date']
+
+    def get(self, request, *args, **kwargs):
+        institution_id = self.request.query_params.get('institution_id')
+        role_id = self.request.query_params.get('role_id', None)
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM get_institution_users(%s, %s)",
+                [institution_id, role_id]
+            )
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        page = self.paginate_queryset(results)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(results, many=True)
+        return Response(serializer.data)
+
+
+class InstitutionListView(GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = InstitutionViewSerializer
-    ordering = ['-institution_id']
     pagination_class = CustomPagination
-    search_fields = ['institution_name', 'city_id', 'address']
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    search_fields = ['institution_name', 'city_id', 'status']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    ordering_fields = ['institution_name']
 
-    def get_queryset(self, *args, **kwargs):
-        param = self.request.query_params
+    def get(self, request, *args, **kwargs):
+        institution_id = self.request.query_params.get('institution_id', None)
+        institution_name = self.request.query_params.get('institution_name', None)
 
-        query_params = ValidateQueryParams(data=param)
-        query_params.is_valid(raise_exception=True)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM get_institutions(%s, %s)",
+                [institution_id, institution_name]
+            )
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-        queryset = Institution.objects.all().order_by('institution_id')
+        page = self.paginate_queryset(results)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-        if param.get('search') is not None:
-
-            search = param.get('search')
-            query_set = queryset.filter(Q(institution__name__contains=search) | Q(service__name__contains=search))
-
-        elif param.get('city_id') is not None:
-            query_set = queryset.filter(city=param.get('city'))
-
-        elif param.get('institution_name') is not None:
-            query_set = queryset.filter(name__contains=param.get('institution_name'))
-
-        elif param.get('address') is not None:
-            query_set = queryset.filter(address__contains=param.get('address'))
-
-        else:
-            query_set = queryset
-
-        return query_set
-
+        serializer = self.get_serializer(results, many=True)
+        return Response(serializer.data)
 
 class InstitutionView(GenericAPIView):
     permission_classes = [AllowAny]
@@ -321,54 +363,69 @@ class InstitutionView(GenericAPIView):
         return Response(data, status=status.HTTP_200_OK, content_type="application/json")
 
 
-class InstitutionServiceListView(ListAPIView):
+class SaveServiceView(GenericAPIView):
     permission_classes = [AllowAny]
-    serializer_class = InstitutionServiceViewSerializer
-    ordering = ['-institution_service_id']
+
+    def post(self, request, *args, **kwargs):
+        serializer = SaveServiceSerializer(data=request.data)
+        if serializer.is_valid():
+            service_id = serializer.validated_data.get('service_id')
+            service_name = serializer.validated_data.get('service_name')
+            service_category = serializer.validated_data.get('service_category')
+            description = serializer.validated_data.get('description')
+
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT save_service(%s, %s, %s, %s)", [service_id, service_name, service_category, description])
+                new_service_id = cursor.fetchone()[0]
+
+            return Response({"service_id": new_service_id}, status=200)
+
+        return Response(serializer.errors, status=400)
+
+
+class ServiceListView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = ServiceViewSerializer
     pagination_class = CustomPagination
+    search_fields = ['service_name', 'service_category']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    ordering_fields = ['service_name']
 
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    def get_queryset(self):
+        service_id = self.request.query_params.get('service_id', None)
+        service_name = self.request.query_params.get('service_name', None)
+        service_category = self.request.query_params.get('service_category', None)
 
-    def get_queryset(self, *args, **kwargs):
-        param = self.request.query_params
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM get_services(%s, %s, %s)", [service_id, service_name, service_category])
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-        queryset = InstitutionService.objects.all().order_by('institution_service_id')
-
-        if param.get('search') is not None:
-
-            search = param.get('search')
-            query_set = queryset.filter(Q(institution__name__contains=search) | Q(service__name__contains=search))
-
-        elif param.get('institution_id') is not None:
-            query_set = queryset.filter(institution_service__pk=param.get('institution_id'))
-
-        elif param.get('service_id') is not None:
-            query_set = queryset.filter(institution_service__city__contains=param.get('service_id'))
-
-        else:
-            query_set = queryset
-
-        return query_set
+        return results
 
 
-class InstitutionServiceView(GenericAPIView):
+class InstitutionServiceView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = InstitutionServiceViewSerializer
+    pagination_class = CustomPagination
+    search_fields = ['service_name', 'service_category']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    ordering_fields = ['service_name', 'price']
 
-    def get(self, request):
-        try:
-            param = self.request.query_params.get('pk', default=None)
-            if param is None:
-                return Response('Please add primary key.')
-            institution = InstitutionService.objects.get(pk=param)
-        except InstitutionService.DoesNotExist:
-            return Response({'Failure': 'Service does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+    def get_queryset(self):
+        institution_service_id = self.request.query_params.get('institution_service_id', None)
+        institution_id = self.request.query_params.get('institution_id', None)
+        is_active = self.request.query_params.get('is_active', None)
 
-        serializer = InstitutionServiceViewSerializer(institution)
-        data = serializer.data
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM get_institution_services(%s, %s, %s)",
+                [institution_service_id, institution_id, is_active]
+            )
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-        return Response(data, status=status.HTTP_200_OK, content_type="application/json")
-
+        return results
 
 class InstitutionAddView(CreateAPIView):
     permission_classes = [AllowAny]
@@ -406,30 +463,33 @@ class InstitutionRemoveView(DestroyAPIView):
         return Response({"You have successfully deleted desired institution."}, status=status.HTTP_200_OK)
 
 
-class MedicalRecordListView(ListAPIView):
+class MedicalRecordListView(GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = MedicalRecordViewSerializer
-    ordering = ['-medical_record_id']
     pagination_class = CustomPagination
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    search_fields = ['file', 'notes']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    ordering_fields = ['appointment_id']
 
-    def get_queryset(self, *args, **kwargs):
-        param = self.request.query_params
+    def get(self, request, *args, **kwargs):
+        appointment_id = self.request.query_params.get('appointment_id', None)
+        user_id = self.request.query_params.get('user_id', None)
 
-        if param.get('patient') is not None:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM get_medical_records(%s, %s)",
+                [appointment_id, user_id]
+            )
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-            patient = param.get('patient')
-            query_set = MedicalRecord.objects.filter(user_id=patient)
+        page = self.paginate_queryset(results)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-        elif param.get('appointment') is not None:
-
-            appointment = param.get('appointment')
-            query_set = MedicalRecord.objects.filter(appointment_id=appointment)
-
-        else:
-            query_set = MedicalRecord.objects.none()
-
-        return query_set
+        serializer = self.get_serializer(results, many=True)
+        return Response(serializer.data)
 
 
 class MedicalRecordView(GenericAPIView):
@@ -469,6 +529,65 @@ class AppointmentView(GenericAPIView):
 
         return Response(data, status=status.HTTP_200_OK, content_type="application/json")
 
+
+
+class AppointmentsListView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = AppointmentViewSerializer
+    pagination_class = CustomPagination
+    search_fields = ['patient_first_name', 'patient_last_name', 'doctor_first_name', 'doctor_last_name']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    ordering_fields = ['date_time']
+
+    def get(self, request, *args, **kwargs):
+        appointment_id = self.request.query_params.get('appointment_id', None)
+        patient_user_id = self.request.query_params.get('patient_user_id', None)
+        doctor_user_id = self.request.query_params.get('doctor_user_id', None)
+        patient_id = self.request.query_params.get('patient_id', None)
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM get_appointments(%s, %s, %s, %s)",
+                [appointment_id, patient_user_id, doctor_user_id, patient_id]
+            )
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        page = self.paginate_queryset(results)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(results, many=True)
+        return Response(serializer.data)
+
+
+class InstitutionPartiesListView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = InstitutionPartyViewSerializer
+    pagination_class = CustomPagination
+    search_fields = ['first_name', 'last_name', 'email', 'phone_number']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    ordering_fields = ['last_name']
+
+    def get(self, request, *args, **kwargs):
+        institution_id = self.request.query_params.get('institution_id', None)
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM get_institution_parties(%s)",
+                [institution_id]
+            )
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        page = self.paginate_queryset(results)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(results, many=True)
+        return Response(serializer.data)
 
 class UpcomingAppointmentsUserView(ListAPIView):
     permission_classes = [AllowAny]
@@ -617,6 +736,42 @@ class WeRecommendView(ListAPIView):
         institutions = Institution.objects.order_by('rating')[:6]
         return institutions
 
+
+class CitiesListView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = CityViewSerializer
+    pagination_class = CustomPagination
+    search_fields = ['city_name']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    ordering_fields = ['city_name']
+
+    def list(self, request, *args, **kwargs):
+        city_id = request.query_params.get('city_id', None)
+
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM get_cities(%s)", [city_id])
+            columns = [col[0] for col in cursor.description]
+            cities = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        return Response(cities)
+
+
+class CountriesListView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = CountryViewSerializer
+
+    def get_queryset(self):
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM get_countries(NULL, NULL)")
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        return results
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return self.get_paginated_response(serializer.data)
+
 class DrugListView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = DrugSerializer
@@ -650,34 +805,67 @@ class TreatmentListView(ListAPIView):
         return treatments
 
 
-class RoleListView(ListAPIView):
+
+class RoleListView(GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = RoleSerializer
     pagination_class = CustomPagination
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    search_fields = ['role_code']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    ordering_fields = ['role_name']
 
-    def get_queryset(self):
-        roles = Role.objects.order_by('role_name')
-        return roles
+    def get(self, request, *args, **kwargs):
+        role_id = self.request.query_params.get('role_id', None)
+        role_code = self.request.query_params.get('role_code', None)
+        is_active = self.request.query_params.get('is_active', None)
 
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM get_roles(%s, %s, %s)",
+                [role_id, role_code, is_active]
+            )
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        page = self.paginate_queryset(results)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(results, many=True)
+        return Response(serializer.data)
+
+class GetUserSettingsView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = UserSettingsViewSerializer
+
+    def get(self, request, *args, **kwargs):
+        p_user_id = request.query_params.get('p_user_id')
+
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM get_user_settings(%s)
+            """, [p_user_id])
+            columns = [col[0] for col in cursor.description]
+            user_settings = dict(zip(columns, cursor.fetchone()))
+
+        return Response(user_settings)
 
 class ProfileView(GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = PatientViewSerializer
 
-    def get(self, request):
-        try:
-            param = self.request.query_params.get('pk', default=None)
-            if param is None:
-                return Response('Please add primary key.')
-            user = User.objects.get(pk=param)
-        except User.DoesNotExist:
-            return Response({'Failure': 'User does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+    def get(self, request, *args, **kwargs):
+             p_user_id = request.query_params.get('p_user_id')
 
-        serializer = PatientViewSerializer(user)
-        data = serializer.data
+             with connection.cursor() as cursor:
+                 cursor.execute("""
+                     SELECT * FROM get_user_info(%s)
+                 """, [p_user_id])
+                 columns = [col[0] for col in cursor.description]
+                 user_info = dict(zip(columns, cursor.fetchone()))
 
-        return Response(data, status=status.HTTP_200_OK, content_type="application/json")
+             return Response(user_info)
 
 
 '''
@@ -709,35 +897,73 @@ class RatingAddView(CreateAPIView):
         except Institution.DoesNotExist:
             return Response({'Failure': 'Institution you are trying to rate does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 '''
+class UserRolesListView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = UserRoleViewSerializer
+    pagination_class = CustomPagination
+    search_fields = ['role_code']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    ordering_fields = ['role_name']
 
+    def get(self, request, *args, **kwargs):
+        user_id = self.request.query_params.get('user_id', None)
+        institution_id = self.request.query_params.get('institution_id', None)
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM get_user_roles(%s, %s)",
+                [user_id, institution_id]
+            )
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        page = self.paginate_queryset(results)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(results, many=True)
+        return Response(serializer.data)
+
+class GetPartyView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = PartyViewSerializer
+
+    def get(self, request, *args, **kwargs):
+        p_party_id = request.query_params.get('p_party_id')
+
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM get_party(%s)
+            """, [p_party_id])
+            columns = [col[0] for col in cursor.description]
+            party = dict(zip(columns, cursor.fetchone()))
+
+        return Response(party)
 
 class MedicalRecordAddView(CreateAPIView):
     permission_classes = [AllowAny]
-    serializer_class = MedicalRecordSerializer
+    serializer_class = MedicalRecordViewSerializer
 
-    def create(self, request, **kwargs):
-        try:
-            param = self.request.query_params.get('pk', default=None)
-            if param is None:
-                return Response('Please add primary key.')
+    def post(self, request, *args, **kwargs):
+        p_medical_record_id = request.data.get('p_medical_record_id')
+        p_appointment_id = request.data.get('p_appointment_id', None)
+        p_user_id = request.data.get('p_user_id', None)
+        p_file = request.data.get('p_file', None)
+        p_notes = request.data.get('p_notes', None)
+        p_reference_values = request.data.get('p_reference_values', None)
 
-            app = Appointment.objects.get(pk=param)
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT save_medical_record(
+                    %s, %s, %s, %s, %s, %s
+                )""", [
+                p_medical_record_id, p_appointment_id, p_user_id,
+                p_file, p_notes, p_reference_values
+            ])
+            result = cursor.fetchone()
 
-            serializer = MedicalRecordSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-            medical_record = MedicalRecord.objects.last()
-            medical_record.appointment_id = app
-            medical_record.save(update_fields=['appointment_id'])
-
-        except Appointment.DoesNotExist:
-            return Response({'Failure': 'Appointment you are trying to add medical_record for does not exist.'},
-                            status=status.HTTP_404_NOT_FOUND)
-
-        upload_pdf(appointment_id=param)
-        return Response("MedicalRecord added successfully.", status=status.HTTP_200_OK)
-
+        return Response({"medical_record_id": result[0]}, status=status.HTTP_201_CREATED)
 
 class AppointmentUpdateView(GenericAPIView):
     permission_classes = [AllowAny]
@@ -829,28 +1055,105 @@ class CanceledAppointmentsView(ListAPIView):
         query_set = Appointment.objects.filter(status=Appointment.STATUS_CANCELED).order_by('-datetime')
         return query_set
 
+class SaveInstitutionServiceView(GenericAPIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = SaveInstitutionServiceSerializer(data=request.data)
+        if serializer.is_valid():
+            institution_id = serializer.validated_data.get('institution_id')
+            service_id = serializer.validated_data.get('service_id')
+            description = serializer.validated_data.get('description')
+            price = serializer.validated_data.get('price')
+            is_active = serializer.validated_data.get('is_active')
+            duration = serializer.validated_data.get('duration')
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT save_institution_service(%s, %s, %s, %s, %s, %s)",
+                    [institution_id, service_id, description, price, is_active, duration]
+                )
+                new_id = cursor.fetchone()[0]
+
+            return Response({"institution_service_id": new_id}, status=200)
+
+        return Response(serializer.errors, status=400)
+
+
+
+class MedicalRecordTemplatesListView(GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = MedicalRecordTemplateViewSerializer
+    pagination_class = CustomPagination
+    search_fields = ['institution_id']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    ordering_fields = ['institution_id']
+
+    def get(self, request, *args, **kwargs):
+        medical_record_template_id = self.request.query_params.get('medical_record_template_id', None)
+        institution_id = self.request.query_params.get('institution_id', None)
+        is_active = self.request.query_params.get('is_active', None)
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM get_medical_record_templates(%s, %s, %s)",
+                [institution_id, medical_record_template_id, is_active]
+            )
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        page = self.paginate_queryset(results)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(results, many=True)
+        return Response(serializer.data)
+
+
+class SaveInstitutionWorkingHoursView(GenericAPIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = SaveInstitutionWorkingHoursSerializer(data=request.data)
+        if serializer.is_valid():
+            institution_id = serializer.validated_data.get('institution_id')
+            day_of_week = serializer.validated_data.get('day_of_week')
+            open_time = serializer.validated_data.get('open_time')
+            close_time = serializer.validated_data.get('close_time')
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT save_institution_working_hours(%s, %s, %s, %s)",
+                    [institution_id, day_of_week, open_time, close_time]
+                )
+                new_id = cursor.fetchone()[0]
+
+            return Response({"institution_working_hour_id": new_id}, status=200)
+
+        return Response(serializer.errors, status=400)
 
 class InstitutionWorkingHoursListView(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = InstitutionWorkingHoursSerializer
-    ordering = ['-institution_working_hour_id']
     pagination_class = CustomPagination
-    search_fields = ['institution_id', 'day_of_week']
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
 
-    def get_queryset(self, *args, **kwargs):
-        param = self.request.query_params
+    def get(self, request, *args, **kwargs):
+        institution_id = self.request.query_params.get('institution_id', None)
 
-        queryset = InstitutionWorkingHours.objects.all().order_by('institution_working_hour_id')
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM get_institution_working_hours(%s)", [institution_id])
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-        if param.get('institution_id') is not None:
-            queryset = queryset.filter(institution_id=param.get('institution_id'))
+        page = self.paginate_queryset(results)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-        elif param.get('day_of_week') is not None:
-            day_of_week = int(param.get('day_of_week'))
-            queryset = queryset.filter(day_of_week=day_of_week)
+        serializer = self.get_serializer(results, many=True)
+        return Response(serializer.data)
 
-        return queryset
 
 
 class PasswordResetView(GenericAPIView):

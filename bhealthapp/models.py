@@ -61,6 +61,15 @@ class City(models.Model):
         ordering = ['city_name']
 
 
+class CityManager(models.Manager):
+    def get_cities(self, city_id=None):
+        sql = "SELECT * FROM get_cities(%s)"
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [city_id])
+            columns = [col[0] for col in cursor.description]
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+
 class User(AbstractUser):
     GENDER_MALE = 0
     GENDER_FEMALE = 1
