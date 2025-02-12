@@ -1,5 +1,4 @@
 import logging
-from actstream import action
 
 from src.notifications.channels.email import EmailChannel
 
@@ -40,5 +39,5 @@ def notify(verb, **kwargs):
 
 # Use only with actstream activated
 def send_action(sender, verb, action_object, target, **kwargs):
-    action.send(sender=sender, verb=verb, action_object=action_object, target=target)
+   # action.send(sender=sender, verb=verb, action_object=action_object, target=target)
     notify(verb, **kwargs)

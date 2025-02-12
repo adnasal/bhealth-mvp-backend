@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   db:
     image: postgres:14.2
@@ -31,18 +29,18 @@ services:
     networks:
       - bhealth-network
 
-  consumer:
-    image: bhealth-mvp-backend_web
-    restart: always
-    env_file: .env
-    command: 'sh -c "python3 manage.py start_consumer"'
-    volumes:
-      - ./:/app
-    depends_on:
-      - db
-      - rabbitmq
-    networks:
-      - bhealth-network
+ # consumer:
+  #  image: bhealth-mvp-backend_web
+   # restart: always
+    #env_file: .env
+   # command: 'sh -c "python3 manage.py start_consumer"'
+    #volumes:
+     # - ./:/app
+    #depends_on:
+     # - db
+      #- rabbitmq
+    #networks:
+     # - bhealth-network
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
