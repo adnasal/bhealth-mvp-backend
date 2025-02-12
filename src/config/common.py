@@ -40,16 +40,10 @@ INSTALLED_APPS = (
     'easy_thumbnails',  # image lib
     'social_django',  # social login
     'corsheaders',  # cors handling
-    'django_inlinecss',  # inline css in templates
+    #'django_inlinecss',  # inline css in templates
     'django_summernote',  # text editor
     'django_celery_beat',  # task scheduler
     'djmoney',  # money object
-    'health_check',
-    'health_check.db',  # stock Django health checkers
-    'health_check.cache',
-    'health_check.storage',
-    'health_check.contrib.migrations',
-    'health_check.contrib.celery_ping',  # requires celery
     # Your apps
     'src.notifications',
     'src.social',

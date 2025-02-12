@@ -4,7 +4,7 @@ from datetime import datetime
 import pika
 from django.core.exceptions import ObjectDoesNotExist
 
-from bhealthapp.models import Appointment, Notification, Lab
+from bhealthapp.models import Appointment, Notification, Institution
 from rmq_send_message import json_string_to_dict
 
 
@@ -107,7 +107,7 @@ class Consumer:
             print("Error: The appointment does not exist")
             self.channel.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
 
-        except Lab.DoesNotExist:
+        except Institution.DoesNotExist:
             print("Error: The lab does not exist")
             self.channel.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
 
